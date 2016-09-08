@@ -1,6 +1,0 @@
-/user_data/CodeProjects/SUI/libsui_static.a
-/user_data/CodeProjects/SUI/Examples/Binaries/HelloWorld
-/user_data/CodeProjects/SUI/Examples/Binaries/GridView
-/user_data/CodeProjects/SUI/Examples/Binaries/BoxLayout
-/user_data/CodeProjects/SUI/Examples/Binaries/Widgets
-/user_data/CodeProjects/SUI/Examples/Binaries/InititiveTracker

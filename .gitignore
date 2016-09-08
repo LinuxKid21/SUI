@@ -1,2 +1,2 @@
-./Build
-./libsui_static.a
+Build/
+libsui_static.a
