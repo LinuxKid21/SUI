@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/Widgets.dir/Widgets/main.cpp.o  -o Widgets -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system ../libsui_static.a -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system 

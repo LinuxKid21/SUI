@@ -1,0 +1,7 @@
+--------LINUX--------
+Create a directory called Build
+Enter that directory in the terminal
+type 'cmake ..'
+type make
+type make install
+static lib will be a file called something like 'libsui_static.a'

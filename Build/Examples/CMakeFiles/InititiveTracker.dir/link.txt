@@ -1,0 +1,1 @@
+/usr/bin/c++      CMakeFiles/InititiveTracker.dir/InititiveTracker/TableLayout.cpp.o CMakeFiles/InititiveTracker.dir/InititiveTracker/main.cpp.o  -o InititiveTracker -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system ../libsui_static.a -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system 
