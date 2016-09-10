@@ -31,7 +31,12 @@ textColor=255,255,255,255
 fillColor=0,0,0,255
 
 [addButton]
+fillColor=255,255,255,255
+fillColorHovered=200,200,200,255
+fillColorClicked=100,100,100,255
+textColor=0,0,0,255
 fontSize=36
+
 
 # note everything that applies to the table also applies to "children" (all the text fields) so those
 # properties most likely must be overriden

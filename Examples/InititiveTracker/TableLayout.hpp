@@ -34,7 +34,10 @@ public:
 
     float getUsedWidth();
     std::function<void(sui::Widget *)> addedTextField;
+protected:
+    virtual void onInput(sf::Event e);
 private:
+	bool shouldSort = false;
     void addColumn();
     const static int column_width = 100;
     const static int button_width = 50;
