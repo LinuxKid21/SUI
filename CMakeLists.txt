@@ -9,13 +9,25 @@ file(GLOB HEADERS "Headers/SUI/*.hpp")
 
 add_library(sui_static STATIC ${SOURCES})
 
+
 include_directories(./Headers)
+
+if(UNIX)
 target_link_libraries(sui_static
 	sfml-graphics
 	sfml-audio
 	sfml-window
 	sfml-system)
-
+elseif(WIN32)
+	include_directories(./SFML)
+	target_link_libraries(sui_static
+		${CMAKE_CURRENT_SOURCE_DIR}/SFML/Libs/libsfml-graphics.a
+		${CMAKE_CURRENT_SOURCE_DIR}/SFML/Libs/libsfml-audio.a
+		${CMAKE_CURRENT_SOURCE_DIR}/SFML/Libs/libsfml-window.a
+		${CMAKE_CURRENT_SOURCE_DIR}/SFML/Libs/libsfml-system.a)
+else()
+	message( FATAL_ERROR "unknown operating system")
+endif()
 install(
 	TARGETS
 		sui_static

@@ -134,7 +134,7 @@ namespace sui {
         } else if(key == "outlineThickness") {
             mRectangleShape.setOutlineThickness(-getProperty(key).as<float>());
         } else if(key == "font") {
-            mText.setFont(*(getProperty(key).as<std::shared_ptr<sf::Font> >()));
+            mText.setFont(*(getProperty(key).as<sf::Font *>()));
             updateText();
             updateCursor();
         } else if(key == "textColor") {
