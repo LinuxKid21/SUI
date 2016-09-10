@@ -24,7 +24,7 @@ protected:
 // because it assumes too much about them and will most likely result in a crash
 class TableLayout : public BoxLayout {
 public:
-    TableLayout();
+    TableLayout(std::function<void(sui::Widget *)>, std::function<void(sui::Widget *)>);
     
     // will likely be handled internally with an X button
     // void removeColumn(unsigned int index);
@@ -33,6 +33,7 @@ public:
     void setAutoSort(bool autoSort) {this->shouldAutoSort = autoSort;}
 
     float getUsedWidth();
+    std::function<void(sui::Widget *)> addedTextField;
 private:
     void addColumn();
     const static int column_width = 100;
@@ -45,6 +46,6 @@ private:
         if(p) p.asFunc()();
     }
     
-    void autoSort();
+    void autoSort(sui::TextField *textfield);
 };
 

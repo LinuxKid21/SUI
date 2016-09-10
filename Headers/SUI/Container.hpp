@@ -31,6 +31,7 @@ namespace sui {
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
         virtual void onUpdate() = 0;
         virtual void onPropertyChanged(const std::string key);
+        void updateChildProperties(Widget *w);
 
         // unfortunately this has to be a pointer to pointer.
         // usually you can just dereference it immediately but when you need
@@ -45,5 +46,7 @@ namespace sui {
         void lockLocation(bool locked);
         void lockSize(bool locked);
         virtual void _onUpdate();
+        virtual void _onPositionChanged();
+        virtual void _onSizeChanged();
     };
 }

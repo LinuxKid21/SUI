@@ -46,7 +46,11 @@ namespace sui {
         mLocalPosition = pos;
         mInvalidGlobalPosition = true;
         
+        _onPositionChanged();
         return true;
+    }
+    void Widget::_onPositionChanged() {
+        onPositionChanged();
     }
     sf::Vector2f Widget::getLocalPosition() const {
         return mLocalPosition;
@@ -62,7 +66,11 @@ namespace sui {
         }
         mLocalSize = size;
         
+        _onSizeChanged();
         return true;
+    }
+    void Widget::_onSizeChanged() {
+        onSizeChanged();
     }
     sf::Vector2f Widget::getSize() const {
         return mLocalSize;
@@ -91,6 +99,8 @@ namespace sui {
         mOriginY = originY;
         
         mInvalidGlobalPosition = true;
+        
+        _onPositionChanged();
         return true;
     }
     

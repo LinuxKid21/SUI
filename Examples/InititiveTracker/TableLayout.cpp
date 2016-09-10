@@ -50,7 +50,7 @@ void BoxLayout::onUpdate() {
 
 
 
-TableLayout::TableLayout() : BoxLayout() {
+TableLayout::TableLayout(std::function<void(sui::Widget *)> addedText, std::function<void(sui::Widget *)> addedAddButton) : BoxLayout() {
     setProperty("direction", sui::Property::make(sui::BoxLayout::HORIZONTAL));
     BoxLayout *vbox = new BoxLayout();
     vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
@@ -59,9 +59,10 @@ TableLayout::TableLayout() : BoxLayout() {
     vbox->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
     addChild(vbox);
     
-    auto addText = [&vbox](sf::String &&str) {
+    auto addText = [&vbox, &addedText](sf::String &&str) {
         sui::FrameLayout *frame = new sui::FrameLayout();
         sui::Text *text = new sui::Text();
+        addedText(text);
         text->setProperty("text", sui::Property::make<sf::String>(std::move(str)));
         text->setProperty("frameSize", sui::Property::make(sf::Vector2f(1,.6)));
         text->setProperty("framePos", sui::Property::make(sf::Vector2f(0,.5)));
@@ -69,7 +70,6 @@ TableLayout::TableLayout() : BoxLayout() {
         text->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
         text->setProperty("posTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
         text->setProperty("posTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
-        // text->setProperty("textColor", sui::Property::make(sf::Color(0,0,0,255)));
         
         frame->addChild(text);
         vbox->addChild(frame);
@@ -83,8 +83,8 @@ TableLayout::TableLayout() : BoxLayout() {
     
     add_button = new sui::Button();
     addChild(add_button);
+    addedAddButton(add_button);
     add_button->setProperty("text", sui::Property::make<sf::String>("+"));
-    add_button->setProperty("fontSize", sui::Property::make(36.f));
     add_button->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
     add_button->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
     add_button->setProperty("outlineThickness", sui::Property::make(0.f));
@@ -95,11 +95,8 @@ TableLayout::TableLayout() : BoxLayout() {
         addColumn();
         onAdded();
     }));
-    
-    
+
     shouldAutoSort = false;
-    
-    setProperty("outlineColor", sui::Property::make(sf::Color(0,0,0,255)));
 }
 
 void TableLayout::addColumn() {
@@ -111,15 +108,33 @@ void TableLayout::addColumn() {
     
     for(unsigned int i = 0;i < 4; i++) {
         sui::TextField *textfield = new sui::TextField();
+        addedTextField(textfield);
         textfield->setProperty("outlineThickness", sui::Property::make(0.f));
+        textfield->setProperty("fillColor", textfield->getProperty("normalColor"));
         if(i == 1 || i == 2)
-            textfield->setProperty("onChanged", sui::Property::makeFunc([this](){
-                autoSort();
+            textfield->setProperty("onChanged", sui::Property::makeFunc([this, textfield](){
+                autoSort(textfield);
             }));
         vbox->addChild(textfield);
     }
 }
-void TableLayout::autoSort() {
+void TableLayout::autoSort(sui::TextField *textfield) {
+    textfield->setProperty("fillColor", textfield->getProperty("normalColor"));
+    sf::String str = textfield->getProperty("text").as<sf::String>();
+    for(unsigned int i = 0; i < str.getSize(); i++) {
+        if(str[i] == L'+' || str[i] == L'-') {
+            if(i == 0) {
+                break;
+            } else {
+                textfield->setProperty("fillColor", textfield->getProperty("errorColor"));
+                break;
+            }
+        }
+        if(str[i] != L'1' && str[i] != L'2' && str[i] != L'3' && str[i] != L'4' && str[i] != L'5' && str[i] != L'6' && str[i] != L'7' && str[i] != L'8' && str[i] != L'9' && str[i] != L'0') {
+            textfield->setProperty("fillColor", sui::Property::make(sf::Color(255,0,0,255)));
+            break;
+        }
+    }
     if(shouldAutoSort) {
         sort();
     }

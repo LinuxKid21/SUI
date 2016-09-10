@@ -3,6 +3,85 @@
 
 #include "TableLayout.hpp"
 #include <iostream>
+#include <fstream>
+#include <string>
+
+struct ThemeReader {
+    ThemeReader() {
+        file.open("Theme.txt", std::ios::in);
+    }
+    void setWidgetProps(sui::Widget *w, const std::string section) {
+        file.clear();
+        file.seekg(0, std::ios::beg);
+        
+        std::string line;
+        while(getline(file, line)) {
+            if(line == "[" + section + "]")
+                break;
+        };
+        while(getline(file, line)) {
+            if(line.size() == 0) continue;
+            if(line[0] == '#') continue; // comment
+            if(line[0] == '[') break; // new section
+            std::string propName;
+            std::string propValue;
+            bool foundName = false;
+            for(char c : line) {
+                if(c == '=') {
+                    foundName = true;
+                } else if(foundName) {
+                    propValue += c;
+                } else {
+                    propName += c;
+                }
+            }
+            assignProp(w, propName, propValue);
+        }
+    }
+    void assignProp(sui::Widget *w, std::string name, std::string value) {
+        if(name == "font") {
+            fonts[c_font] = sf::Font();
+            fonts[c_font].loadFromFile(value);
+            w->setProperty(name, sui::Property::make(&fonts[c_font]));
+            c_font++;
+        } else if(name == "outlineThickness" || name == "fontSize" || name == "textPadding" || name == "padding") {
+            w->setProperty(name, sui::Property::make<float>(std::stof(value)));
+        } else if(name == "fillColor" || name == "fillColorHovered" || name == "fillColorClicked" ||
+                  name == "textColor" || name == "outlineColor" || name == "normalColor" || name == "errorColor") {
+            sf::Color color;
+            unsigned int i = 0;
+            auto getV = [&i, &value](){
+                std::string v = "";
+                for(;i < value.size(); i++) {
+                    char c = value[i];
+                    if(c == ',') {
+                        i++;
+                        break;
+                    }
+                    v += c;
+                }
+                return v;
+            };
+            color.r = std::stof(getV());
+            color.g = std::stof(getV());
+            color.b = std::stof(getV());
+            color.a = std::stof(getV());
+            w->setProperty(name, sui::Property::make(color));
+        } else if(name == "textAlignX" || name == "textAlignY") {
+            sui::ORIGIN o;
+            if(value == "start") { o = sui::ORIGIN_START;}
+            else if(value == "end") {o = sui::ORIGIN_END;}
+            else {o = sui::ORIGIN_MIDDLE;}
+            w->setProperty(name, sui::Property::make(o));
+        }
+    }
+    ~ThemeReader() {
+        file.close();
+    }
+    sf::Font fonts[10]; // just in case :)
+    int c_font = 0;
+    std::ifstream file;
+};
 
 int main() {
     int window_width = 700;
@@ -15,19 +94,10 @@ int main() {
     
     sui::Property BoxAbs = sui::Property::make(sui::BoxLayout::ABSOLUTE);
     
+    ThemeReader reader;
+    
     sui::BoxLayout *vbox = new sui::BoxLayout();
-    sf::Font font = sf::Font();
-    font.loadFromFile("arial.ttf");
-    vbox->setProperty("font", sui::Property::make(&font));
-    vbox->setProperty("outlineThickness", sui::Property::make(4.f));
-    vbox->setProperty("fillColor", sui::Property::make(sf::Color(255,255,255,255)));
-    vbox->setProperty("fillColorHovered", sui::Property::make(sf::Color(200,200,200,255)));
-    vbox->setProperty("fillColorClicked", sui::Property::make(sf::Color(100,100,100,255)));
-    vbox->setProperty("textColor", sui::Property::make(sf::Color(0,0,0,255)));
-    vbox->setProperty("outlineColor", sui::Property::make(sf::Color(0,255,0,255)));
-    vbox->setProperty("fontSize", sui::Property::make(24.f));
-    vbox->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
-    vbox->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
+    reader.setWidgetProps(vbox, "all");
     vbox->setProperty("padding", sui::Property::make(5.f));
     vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
     
@@ -42,13 +112,14 @@ int main() {
     vbox->addChild(hbox);
     
     auto *sort_button = hbox->addChild(new sui::Button());
+    reader.setWidgetProps(sort_button, "sortButton");
     sort_button->setProperty("text", sui::Property::make<sf::String>("Sort"));
-    sort_button->setProperty("fontSize", sui::Property::make(16.f));
     sort_button->setProperty("boxSize", sui::Property::make(sf::Vector2f(75, 1)));
     sort_button->setProperty("scaleTypeX", BoxAbs);
     
     
     auto *check_box = hbox->addChild(new sui::CheckBox());
+    reader.setWidgetProps(sort_button, "autoSortCheck");
     check_box->setProperty("outlineThickness", sui::Property::make(2.f));
     // 25 is calculated for lack of a better method
     check_box->setProperty("boxSize", sui::Property::make(sf::Vector2f(25, 25)));
@@ -57,32 +128,38 @@ int main() {
     
     sui::FrameLayout *auto_sort_text_frame = static_cast<sui::FrameLayout *>(hbox->addChild(new sui::FrameLayout()));
     auto *auto_sort_text = auto_sort_text_frame->addChild(new sui::Text());
+    reader.setWidgetProps(auto_sort_text, "autoSortText");
     auto_sort_text->setProperty("text", sui::Property::make<sf::String>("Auto Sort"));
-    auto_sort_text->setProperty("textColor", sui::Property::make(sf::Color(255,255,255,255)));
     auto_sort_text_frame->setProperty("frameSize", sui::Property::make(sf::Vector2f(1,.5)));
     auto_sort_text_frame->setProperty("framePos", sui::Property::make(sf::Vector2f(0,.5)));
     
     auto *divider = vbox->addChild(new sui::ColorBox());
+    reader.setWidgetProps(divider, "divider");
     divider->setProperty("boxSize", sui::Property::make(sf::Vector2f(1, 3)));
     divider->setProperty("scaleTypeY", BoxAbs);
-    divider->setProperty("fillColor", sui::Property::make(sf::Color(0,0,0,255)));
     
     
     
-    TableLayout *table = new TableLayout();
+    TableLayout *table = new TableLayout(
+        [&reader](sui::Widget *text){
+            reader.setWidgetProps(text, "tableText");
+        },
+        [&reader](sui::Widget *addButton){
+            reader.setWidgetProps(addButton, "addButton");
+        });
+    reader.setWidgetProps(table, "table");
     table->setProperty("onAdded", sui::Property::makeFunc([table, vbox](){
         vbox->setSize(sf::Vector2f(table->getUsedWidth(),138));
         vbox->update();
     }));
     
-    table->setProperty("padding", sui::Property::make(3.f));
-    
-    
+    table->addedTextField = [&reader](sui::Widget *textfield){
+        reader.setWidgetProps(textfield, "tableTextField");
+    };
     vbox->setSize(sf::Vector2f(table->getUsedWidth(),138));
     table->setProperty("boxSize", sui::Property::make(sf::Vector2f(1, 100)));
     table->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
     table->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::ABSOLUTE));
-    // vbox->setSize(sf::Vector2f(table->getUsedWidth(),138));
     vbox->addChild(table);
     vbox->update();
 

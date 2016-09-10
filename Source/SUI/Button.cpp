@@ -49,62 +49,83 @@ namespace sui {
         updateFillColors();
     }
     
-    
-    void Button::onUpdate() {
-        mText.setString(getText());
-        mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
-        mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
-        mText.setFont(*getProperty("font").as<sf::Font *>());
-        mText.setColor(getProperty("textColor").as<sf::Color>());
-        mText.setCharacterSize(getProperty("fontSize").as<float>());
-        updateFillColors();
-        
-        
-        mRectangleShape.setRotation(0); // somewhere rotation was somehow changed sometimes!!! FIXME
+    void Button::onPositionChanged() {
         mRectangleShape.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
+        updateText();
+    }
+    void Button::onSizeChanged() {
         mRectangleShape.setSize(getSize());
         updateText();
+    }
+    void Button::onPropertyChanged(const std::string key) {
+        if(key == "outlineColor") {
+            mRectangleShape.setOutlineColor(getProperty(key).as<sf::Color>());
+        } else if(key == "font") {
+            mText.setFont(*getProperty(key).as<sf::Font *>());
+            updateText();
+        } else if(key == "textColor") {
+            mText.setColor(getProperty(key).as<sf::Color>());
+        } else if(key == "fontSize") {
+            mText.setCharacterSize(getProperty(key).as<float>());
+        } else if(key == "outlineThickness") {
+            mRectangleShape.setOutlineThickness(-getProperty(key).as<float>());
+        } else if(key == "text") {
+            mText.setString(getProperty(key).as<sf::String>());
+            updateText();
+        } else if(key == "textOriginX") {
+            updateText();
+        } else if(key == "textOriginY") {
+            updateText();
+        } else if(key == "fillColorClicked") {
+            norm_color = getProperty(key).as<sf::Color>();
+            updateFillColors();
+        } else if(key == "fillColorHovered") {
+            hover_color = getProperty(key).as<sf::Color>();
+            updateFillColors();
+        } else if(key == "fillColor") {
+            click_color = getProperty(key).as<sf::Color>();
+            updateFillColors();
+        }
     }
     
     void Button::updateFillColors() {
         if(mClicked) {
-            mRectangleShape.setFillColor(getProperty("fillColorClicked").as<sf::Color>());
+            mRectangleShape.setFillColor(norm_color);
         } else if(mHovered) {
-            mRectangleShape.setFillColor(getProperty("fillColorHovered").as<sf::Color>());
+            mRectangleShape.setFillColor(hover_color);
         } else {
-            mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
+            mRectangleShape.setFillColor(click_color);
         }
     }
     void Button::updateText() {
-        ORIGIN textOriginX = getTextOriginX();
-        ORIGIN textOriginY = getTextOriginY();
-        setTextOrigin(mText, textOriginX, textOriginY, 'X');
+        if(!getProperty("font")) return;
+        setTextOrigin(mText, getTextOriginX(), getTextOriginY(), 'X');
         int x;
         int y;
-        switch(textOriginX) {
+        switch(getTextOriginX()) {
             case ORIGIN_START:
-                x = getGlobalBounds().left;
+                x = getGlobalBounds().left + getTextPadding();
                 break;
             case ORIGIN_MIDDLE:
                 x = getGlobalBounds().left+getGlobalBounds().width/2;
                 break;
             case ORIGIN_END:
-                x = getGlobalBounds().left+getGlobalBounds().width;
+                x = getGlobalBounds().left+getGlobalBounds().width - getTextPadding();
                 break;
             default:
                 throw "mTextOriginX is not a valid value!";
         }
         
         
-        switch(textOriginY) {
+        switch(getTextOriginY()) {
             case ORIGIN_START:
-                y = getGlobalBounds().top;
+                y = getGlobalBounds().top + getTextPadding();
                 break;
             case ORIGIN_MIDDLE:
                 y = getGlobalBounds().top+getGlobalBounds().height/2;
                 break;
             case ORIGIN_END:
-                y = getGlobalBounds().top+getGlobalBounds().height;
+                y = getGlobalBounds().top+getGlobalBounds().height - getTextPadding();
                 break;
             default:
                 throw "mTextOriginY is not a valid value!";

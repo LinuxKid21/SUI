@@ -49,8 +49,10 @@ namespace sui {
     protected:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
         virtual void onInput(sf::Event e) = 0;
-        virtual void onUpdate() = 0;
+        virtual void onUpdate() {};
         virtual void onPropertyChanged(const std::string key) {}
+        virtual void onPositionChanged() {}
+        virtual void onSizeChanged() {}
         
         ORIGIN mOriginX;
         ORIGIN mOriginY;
@@ -59,6 +61,8 @@ namespace sui {
         Property nullProperty;
         // necessary extra layer of complexity so container has some extra control nothing else needs
         virtual void _onUpdate();
+        virtual void _onPositionChanged();
+        virtual void _onSizeChanged();
         
         // helper for getLocalBounds and getGlobalBounds functions
         sf::FloatRect _getBoundsGeneric(const float x, const float y, const float w, const float h) const;

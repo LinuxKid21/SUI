@@ -1,4 +1,5 @@
 #include <SUI/Container.hpp>
+#include <unordered_set>
 
 namespace sui {
     Container::Container() : Widget() {
@@ -33,6 +34,26 @@ namespace sui {
         lockLocation(true);
         lockSize(true);
     }
+    void Container::_onPositionChanged() {
+        lockLocation(false);
+        lockSize(false);
+        onPositionChanged();
+        for(auto &child : mChildren) {
+            child->_onPositionChanged();
+        }
+        lockLocation(true);
+        lockSize(true);
+    }
+    void Container::_onSizeChanged() {
+        lockLocation(false);
+        lockSize(false);
+        onSizeChanged();
+        for(auto &child : mChildren) {
+            child->_onSizeChanged();
+        }
+        lockLocation(true);
+        lockSize(true);
+    }
     void Container::onPropertyChanged(const std::string key) {
         for(unsigned int i = 0; i < mChildren.size(); i++) {
             const Widget *c = mChildren[i];
@@ -52,6 +73,7 @@ namespace sui {
         }
         mChildren.push_back(widget);
         widget->mParent = this;
+        updateChildProperties(widget);
         return widget;
     }
     
@@ -64,7 +86,21 @@ namespace sui {
         }
         mChildren.insert(mChildren.begin() + pos, widget);
         widget->mParent = this;
+        updateChildProperties(widget);
         return widget;
+    }
+    void Container::updateChildProperties(Widget *w) {
+        std::unordered_set<std::string> names;
+        Widget *iter = this;
+        while(iter != nullptr) {
+            for(std::map<std::string,Property>::iterator it=iter->mProperties.begin(); it!=iter->mProperties.end(); ++it) {
+                if(names.find(it->first) == names.end()) {
+                    onPropertyChanged(it->first);
+                    names.insert(it->first);
+                }
+            }
+            iter = iter->getParent();
+        }
     }
     
     Widget *Container::removeChild(Widget *widget) {

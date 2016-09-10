@@ -29,7 +29,9 @@ namespace sui {
     private:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
         virtual void onInput(sf::Event e);
-        virtual void onUpdate();
+        virtual void onPropertyChanged(const std::string key);
+        virtual void onPositionChanged();
+        virtual void onSizeChanged();
         
         sf::RectangleShape mRectangleShape;
         sf::Text mText;
@@ -52,21 +54,22 @@ namespace sui {
             const Property &p = getProperty("onClickedUp");
             if(p) p.asFunc()();
         }
-        std::string getText() {
-            const Property &p = getProperty("text");
-            if(p) return p.as<sf::String>();
-            return "";
-        }
         ORIGIN getTextOriginX() {
-            if(getProperty("textOriginX")) return getProperty("textOriginX").as<ORIGIN>();
+            if(getProperty("textAlignX")) return getProperty("textAlignX").as<ORIGIN>();
             return ORIGIN_MIDDLE;
         }
         ORIGIN getTextOriginY() {
-            if(getProperty("textOriginY")) return getProperty("textOriginY").as<ORIGIN>();
+            if(getProperty("textAlignY")) return getProperty("textAlignY").as<ORIGIN>();
             return ORIGIN_MIDDLE;
         }
+        float getTextPadding() {
+            if(getProperty("textPadding")) return getProperty("textPadding").as<float>();
+            return 5;
+        }
         
-        
+        sf::Color norm_color;
+        sf::Color hover_color;
+        sf::Color click_color;
         void updateFillColors();
         void updateText();
     };

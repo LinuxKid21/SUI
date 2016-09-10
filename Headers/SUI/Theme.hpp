@@ -5,9 +5,20 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <algorithm>
+#include <exception>
 #include <iostream>
 
 namespace sui {
+    struct nullPropertyAccessed : public std::exception
+    {
+        std::string message;
+        nullPropertyAccessed(const std::string name) {
+            message = std::string("null property '") + name + "' accessed!";
+        }
+        const char *what() const throw() {
+            return message.c_str();
+        }
+    };
     enum ORIGIN {
         ORIGIN_START = 0,
         ORIGIN_MIDDLE,

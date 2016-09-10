@@ -1,0 +1,53 @@
+# comments can only be at the beginning of lines
+# except for in strings and comments spaces are not allowed
+
+# fontSize only applies to buttons for "technical reasons" :)
+
+# all applies properties to everything unless they override it
+[all]
+font=arial.ttf
+outlineThickness=2
+fillColor=0,0,0,255
+fillColorHovered=50,50,50,255
+fillColorClicked=90,90,90,255
+textColor=255,255,255,255
+outlineColor=255,255,255,255
+fontSize=24
+textAlignX=middle
+textAlignY=middle
+# if textAlignX or Y is start or end then textPadding has effect
+# textPadding=5
+
+[sortButton]
+fontSize=16
+
+[autoSortCheck]
+outlineThickness=2
+
+[autoSortText]
+textColor=255,255,255,255
+
+[divider]
+fillColor=0,0,0,255
+
+[addButton]
+fontSize=36
+
+# note everything that applies to the table also applies to "children" (all the text fields) so those
+# properties most likely must be overriden
+[table]
+outlineColor=0,0,0,255
+
+# not well names. The thickness of the bars seperating text fields
+padding=3
+
+[tableText]
+textColor=0,0,0,255
+
+# do not set fillColor
+# use normalColor and errorColor instead
+[tableTextField]
+textColor=0,0,0,255
+normalColor=255,255,255,255
+errorColor=255,0,0,255
+

@@ -128,18 +128,28 @@ namespace sui {
         }
     }
     
-    void TextField::onUpdate() {
-        mRectangleShape.setFillColor(sf::Color(255,255,255,255)); // I d
-        mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
-        mRectangleShape.setOutlineThickness(getProperty("outlineThickness").as<float>());
-        mText.setFont(*(getProperty("font").as<std::shared_ptr<sf::Font> >()));
-        mText.setColor(getProperty("textColor").as<sf::Color>());
-        
-        
-        float outlineThickness = getProperty("outlineThickness").as<float>();
-        mRectangleShape.setPosition(sf::Vector2f(getGlobalPosition().x+outlineThickness, getGlobalPosition().y+outlineThickness));
-        mRectangleShape.setSize(getSize()-sf::Vector2f(2*outlineThickness, 2*outlineThickness));
-        
+    void TextField::onPropertyChanged(const std::string key) {
+        if(key == "outlineColor") {
+            mRectangleShape.setOutlineColor(getProperty(key).as<sf::Color>());
+        } else if(key == "outlineThickness") {
+            mRectangleShape.setOutlineThickness(-getProperty(key).as<float>());
+        } else if(key == "font") {
+            mText.setFont(*(getProperty(key).as<std::shared_ptr<sf::Font> >()));
+            updateText();
+            updateCursor();
+        } else if(key == "textColor") {
+            mText.setColor(getProperty(key).as<sf::Color>());
+        } else if(key == "fillColor") {
+            mRectangleShape.setFillColor(getProperty(key).as<sf::Color>());
+        }
+    }
+    void TextField::onPositionChanged() {
+        mRectangleShape.setPosition(sf::Vector2f(getGlobalPosition().x, getGlobalPosition().y));
+        updateText();
+        updateCursor();
+    }
+    void TextField::onSizeChanged() {
+        mRectangleShape.setSize(getSize());
         mCursorShape.setSize(sf::Vector2f(1, getSize().y-8));
         mCursorShape.setOrigin(sf::Vector2f(0,-4));
         
