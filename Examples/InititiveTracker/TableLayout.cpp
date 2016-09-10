@@ -99,6 +99,14 @@ TableLayout::TableLayout(std::function<void(sui::Widget *)> addedText, std::func
     shouldAutoSort = false;
 }
 
+void TableLayout::onInput(sf::Event e) {
+	sui::BoxLayout::onInput(e);
+	if(shouldSort) {
+		sort();
+		shouldSort = false;
+	}
+}
+
 void TableLayout::addColumn() {
     BoxLayout *vbox = new BoxLayout();
     insertChild(vbox, getChildren().size()-1);
@@ -136,7 +144,11 @@ void TableLayout::autoSort(sui::TextField *textfield) {
         }
     }
     if(shouldAutoSort) {
-        sort();
+		// we don't want to call sort immediately
+		// because it may move this over to the right
+		// where the next onInput iterator will call
+		// it again and we get double input!
+        shouldSort = true;
     }
 }
 void TableLayout::sort() {
