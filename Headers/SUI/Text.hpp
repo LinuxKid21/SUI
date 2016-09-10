@@ -6,19 +6,14 @@
 namespace sui {
     class Text : public Widget {
     public:
-        Text(Theme &theme);
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual bool handleInput(sf::Event e);
-        
-        void setText(const sf::String str);
-        
-        void updateTheme();
-        
-        virtual void layoutChanged();
-        std::string getThemeObject();
+        Text();
+
+    protected:
+        virtual void onUpdate();
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
+        virtual void onInput(sf::Event e);
     private:
         void insureTextFits();
         sf::Text mText;
-        sf::String mStr;
     };
 }

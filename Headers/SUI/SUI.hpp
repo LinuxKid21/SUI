@@ -11,7 +11,3 @@
 #include "Theme.hpp"
 #include "FrameLayout.hpp"
 #include "ColorBox.hpp"
-
-namespace sui {
-    void initiateSUI();
-}

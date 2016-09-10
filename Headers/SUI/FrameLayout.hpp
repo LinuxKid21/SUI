@@ -12,28 +12,41 @@ namespace sui {
             RELATIVE = 0, // relative size(e.g. twice as large as others)
             ABSOLUTE // absolute size(e.g. 200px exactly)
         };
-        FrameLayout(Theme &theme);
-        virtual void layoutChanged();
+        FrameLayout();
         
-        bool setChildSize(Widget *child, sf::Vector2f size, DIRECTION_TYPE x_dir, DIRECTION_TYPE y_dir);
-        bool setChildPosition(Widget *child, sf::Vector2f pos, DIRECTION_TYPE x_dir, DIRECTION_TYPE y_dir);
-        
-        virtual Widget *addChild(Widget *widget);
-        virtual Widget *insertChild(Widget *widget, unsigned int pos);
-        virtual Widget *removeChild(Widget *widget);
     protected:
+        virtual void onUpdate();
+        DIRECTION_TYPE getScaleTypeX(Widget *c) {
+            const Property &p = c->getProperty("scaleTypeX");
+            if(p) return p.as<DIRECTION_TYPE>();
+            return RELATIVE;
+        }
+        DIRECTION_TYPE getScaleTypeY(Widget *c) {
+            const Property &p = c->getProperty("scaleTypeY");
+            if(p) return p.as<DIRECTION_TYPE>();
+            return RELATIVE;
+        }
+        sf::Vector2f getFrameSize(Widget *c) {
+            const Property &p = c->getProperty("frameSize");
+            if(p) return p.as<sf::Vector2f>();
+            return sf::Vector2f(1,1);
+        }
         
-        void initiateChildData(void **data);
-        FrameChildData *getFrameChildData(Widget *child);
-        struct FrameChildData {
-            sf::Vector2f size;
-            sf::Vector2f pos;
-            
-            DIRECTION_TYPE pos_type_x;
-            DIRECTION_TYPE pos_type_y;
-            
-            DIRECTION_TYPE size_type_x;
-            DIRECTION_TYPE size_type_y;
-        };
+        DIRECTION_TYPE getPosTypeX(Widget *c) {
+            const Property &p = c->getProperty("posTypeX");
+            if(p) return p.as<DIRECTION_TYPE>();
+            return RELATIVE;
+        }
+        DIRECTION_TYPE getPosTypeY(Widget *c) {
+            const Property &p = c->getProperty("posTypeY");
+            if(p) return p.as<DIRECTION_TYPE>();
+            return RELATIVE;
+        }
+        sf::Vector2f getFramePos(Widget *c) {
+            const Property &p = c->getProperty("framePos");
+            if(p) return p.as<sf::Vector2f>();
+            return sf::Vector2f(0,0);
+        }
+        
     };
 }

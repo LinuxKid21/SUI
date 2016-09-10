@@ -7,12 +7,12 @@
 namespace sui {
     class ColorBox : public Widget {
     public:
-        ColorBox(Theme &theme);
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual bool handleInput(sf::Event e);
-        virtual void layoutChanged();
+        ColorBox();
         
-        void setColor(sf::Color color);
+    protected:
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
+        virtual void onInput(sf::Event e);
+        virtual void onUpdate();
     private:
         sf::RectangleShape mRectangleShape;
     };

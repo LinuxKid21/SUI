@@ -13,143 +13,96 @@ namespace sui {
         ORIGIN_MIDDLE,
         ORIGIN_END
     };
-    
-    class Theme {
-    public:
-        void loadDefaults(const char *font_file);
-        
-        enum TYPE {
-            TYPE_FLOAT = 0,
-            TYPE_BOOL,
-            TYPE_COLOR,
-            TYPE_VECTOR2F,
-            TYPE_ORIGIN,
-            TYPE_STRING,
-            TYPE_FONT,
-            TYPE_VOID
-        };
-        std::string typeToString(TYPE type) {
-            #define CHECK(e) if(type == e) return #e
-            CHECK(TYPE_FLOAT);
-            CHECK(TYPE_BOOL);
-            CHECK(TYPE_COLOR);
-            CHECK(TYPE_VECTOR2F);
-            CHECK(TYPE_ORIGIN);
-            CHECK(TYPE_STRING);
-            CHECK(TYPE_FONT);
-            CHECK(TYPE_VOID);
-            #undef ENUM_TO_STRING
-        }
-        
 
-        static void registerType(const std::string new_type, const std::string parent);
-        
-        void setNumberProperty(const std::string key, float value);
-        void setBoolProperty(const std::string key, bool value);
-        void setColorProperty(const std::string key, sf::Color value);
-        void setVector2fProperty(const std::string key, sf::Vector2f value);
-        void setOriginProperty(const std::string key, ORIGIN value);
-        void setStringProperty(const std::string key, sf::String value);
-        void setFontProperty(const std::string key, std::shared_ptr<sf::Font> value);
-        template<class T>
-        void setVoidProperty(const std::string key, T *value) {
-            if(hasProperty(key)) checkProperty(key, TYPE_VOID);
-            else properties[key] = Property();
-            properties[key].propVoid = std::shared_ptr<void>(value);
-            properties[key].type = TYPE_VOID;
-        }
-
-        float getNumberProperty(const std::string key);
-        bool getBoolProperty(const std::string key);
-        sf::Color getColorProperty(const std::string key);
-        sf::Vector2f getVector2fProperty(const std::string key);
-        ORIGIN getOriginProperty(const std::string key);
-        sf::String getStringProperty(const std::string key);
-        std::shared_ptr<sf::Font> getFontProperty(const std::string key);
-        template<class T>
-        T getVoidProperty(const std::string key) {
-            return static_cast<T>(findProperty(key, TYPE_VOID).propVoid.get());
-        }
-        std::shared_ptr<void> getSharedProperty(const std::string key);
-        
-        TYPE getPropertyType(const std::string key);
-        void removeProperty(const std::string key);
-        bool hasProperty(const std::string key);
+    class Widget;
+    class Property {
     private:
-        struct ParsedString {
-            std::string object;
-            std::string property;
+        struct PropertyImplBase {
+            virtual ~PropertyImplBase(){}
+            virtual PropertyImplBase *copy() = 0;
         };
-        struct ObjectType {
-            ObjectType() {
-                id = current_id++;
+        //handle by value
+        template<class T>
+        struct PropertyImpl : public PropertyImplBase {
+            PropertyImpl(T value) : data(value) {}
+            PropertyImplBase *copy() {
+                return new PropertyImpl<T>(data);
             }
-            std::string name;
-            int id;
-            ObjectType *parent;
-        private:
-            static int current_id;
+            ~PropertyImpl() {}
+            T data;
         };
         
-        static ParsedString parseString(const char *c) {
-            ParsedString parsed_string;
-            bool foundPeriod = false;
-            while(*c != '\0') {
-                if(!foundPeriod) {
-                    if(*c == '.') {
-                        foundPeriod = true;
-                    } else {
-                        parsed_string.object.append(1, *c);
-                    }
-                } else {
-                    if(*c == '.') {
-                        throw std::string("Error! second '.' invalid in string ") + std::string(c);
-                    } else {
-                        parsed_string.property.append(1, *c);
-                    }
-                }
-                c++;
+        // handle references
+        template<class T>
+        struct PropertyImpl<T&> : public PropertyImplBase {
+            PropertyImpl(T value) : data(value) {}
+            PropertyImplBase *copy() {
+                return new PropertyImpl<T>(data);
             }
-            if(!foundPeriod) {
-                throw std::string("no period found in ") + std::string(c) + std::string("! input should be in the form 'object.property'");
-            }
-            return parsed_string;
-        }
-        
-        struct Property {
-            union {
-                float propFloat;
-                bool propBool;
-                sf::Color propColor;
-                sf::Vector2f propVector2f;
-                ORIGIN propOrigin;
-                sf::String propString;
-                std::shared_ptr<sf::Font> propFont;
-                std::shared_ptr<void> propVoid;
-            };
-            TYPE type;
-            static int current_id;
-            int id;
-            Property(){
-                id = current_id++;
-            }
-            void operator=(const Property &other) {
-                id = other.id; // map requires this but do not use it for anything else because it's incomplete!
-            }
-            ~Property(){
-                ; // the union requires this. find out why 'cause I'm clueless
-            }
+            ~PropertyImpl() {}
+            T data;
         };
 
-        void checkProperty(const std::string key, TYPE type);
-        void checkPropertyType(const std::string key, TYPE type);
-        void checkObjectExists(const std::string object); // this takes just the object (the one before the dot)
-        void checkPropertyExists(const std::string object); // this takes just the object (the one before the dot)
-        Property &findProperty(const std::string key, TYPE type);
+        // only one property can have the same impl at the same time and assignment must be const
+        // this is a somewhat nasty hack but I can't think of a better solution
+        PropertyImplBase *impl;
+    public:
+        template<class T>
+        static const Property make(T &&value) {
+            Property p;
+            p.impl = new PropertyImpl<T>(value);
+            return p;
+        }
+        static const Property makeFunc(std::function<void()> &&value) {
+            return make<std::function<void()> >(std::move(value));
+        }
         
+        Property() {
+            impl = nullptr;
+        }
+        Property(const Property &other) {
+            this->impl = other.impl->copy();
+        }
+        void operator=(const Property &other) {
+            this->impl = other.impl->copy();
+        }
         
-        static std::map <std::string, ObjectType> parentObjectType;
-        std::map <std::string, Property> properties;
+        Property(Property &&other) {
+            this->impl = other.impl;
+            other.impl = nullptr;
+        }
+        void operator=(Property &&other) {
+            this->impl = other.impl;
+            other.impl = nullptr;
+        }
+        
+        explicit operator bool() const {
+            return impl != nullptr;
+        }
+        ~Property() {
+            if(impl)
+                delete impl;
+        }
+        template<class T>
+        T as() const {
+            const PropertyImpl<T> *t = static_cast<PropertyImpl<T> *>(impl);
+            return static_cast<T>(t->data);
+        }
+        std::function<void()> asFunc() const {
+            return as<std::function<void()> >();
+        }
+        
+        template<class T>
+        T *asPointer() const {
+            PropertyImpl<T> *t = static_cast<PropertyImpl<T> *>(impl);
+            return static_cast<T *>(&t->data);
+        }
+        
+        template<class T>
+        void set(T value) {
+            const PropertyImpl<T> *t = static_cast<PropertyImpl<T> *>(impl);
+            static_cast<T>(t->data) = value;
+        }
     };
 }
 

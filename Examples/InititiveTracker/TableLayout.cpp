@@ -2,12 +2,11 @@
 #include <algorithm>
 #include <string>
 
-BoxLayout::BoxLayout(sui::Theme &theme, BOX_DIRECTION direction) : sui::BoxLayout(theme, direction) {
-    lockLocation(true);
-    lockSize(true);
+BoxLayout::BoxLayout() : sui::BoxLayout() {
+    ;
 }
-void BoxLayout::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    sui::BoxLayout::draw(target, states);
+void BoxLayout::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
+    sui::BoxLayout::onDraw(target, states);
     for(auto &l : lines) {
         target.draw(l, states);
     }
@@ -20,55 +19,59 @@ void BoxLayout::setLineColors(sf::Color color) {
     }
 }
 
-void BoxLayout::layoutChanged() {
-    sui::BoxLayout::layoutChanged();
-    lockLocation(false);
-    lockSize(false);
+void BoxLayout::onUpdate() {
+    sui::BoxLayout::onUpdate();
     lines.clear();
     // items flow horizontally so lines are vertical between them
-    if(mDirection == HORIZONTAL) {
+    if(getDirection() == HORIZONTAL) {
         // place bar after every item except the last one
         for(unsigned int i = 0; i < getChildren().size()-1; i++) {
             auto &c = getChildren()[i];
             const float place = c->getGlobalBounds().left + c->getSize().x;
-            const float width = mPadding;
+            const float width = getPadding();
             lines.push_back(sf::RectangleShape(sf::Vector2f(width, getSize().y)));
             lines.back().setPosition(sf::Vector2f(place, getGlobalBounds().top));
             
         }
-    } else if(mDirection == VERTICAL) {
+    } else {
         // place bar after every item except the last one
         for(unsigned int i = 0; i < getChildren().size()-1; i++) {
             auto &c = getChildren()[i];
             const float place = c->getGlobalBounds().top + c->getSize().y;
-            const float height = mPadding;
+            const float height = getPadding();
             lines.push_back(sf::RectangleShape(sf::Vector2f(getSize().x, height)));
             lines.back().setPosition(sf::Vector2f(getGlobalBounds().left, place));
         }
     }
-    setLineColors(mColor);
-    lockLocation(true);
-    lockSize(true);
+    setLineColors(getProperty("outlineColor").as<sf::Color>());
 }
 
 
 
 
 
-TableLayout::TableLayout(sui::Theme &theme) : BoxLayout(theme, sui::BoxLayout::HORIZONTAL) {
-    BoxLayout *vbox = new BoxLayout(theme, sui::BoxLayout::VERTICAL);
+TableLayout::TableLayout() : BoxLayout() {
+    setProperty("direction", sui::Property::make(sui::BoxLayout::HORIZONTAL));
+    BoxLayout *vbox = new BoxLayout();
+    vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
+    vbox->setProperty("boxSize", sui::Property::make(sf::Vector2f(text_width,1)));
+    vbox->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::ABSOLUTE));
+    vbox->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
     addChild(vbox);
-    setChildSize(vbox, sf::Vector2f(text_width,1), sui::BoxLayout::ABSOLUTE, sui::BoxLayout::RELATIVE);
     
-    auto addText = [vbox, &theme](const std::string str) {
-        sui::FrameLayout *frame = new sui::FrameLayout(theme);
-        sui::Text *text = new sui::Text(theme);
-        text->setText(str);
+    auto addText = [&vbox](sf::String &&str) {
+        sui::FrameLayout *frame = new sui::FrameLayout();
+        sui::Text *text = new sui::Text();
+        text->setProperty("text", sui::Property::make<sf::String>(std::move(str)));
+        text->setProperty("frameSize", sui::Property::make(sf::Vector2f(1,.6)));
+        text->setProperty("framePos", sui::Property::make(sf::Vector2f(0,.5)));
+        text->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
+        text->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
+        text->setProperty("posTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
+        text->setProperty("posTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
+        // text->setProperty("textColor", sui::Property::make(sf::Color(0,0,0,255)));
         
         frame->addChild(text);
-        frame->setChildSize(text, sf::Vector2f(1,.6), sui::FrameLayout::RELATIVE, sui::FrameLayout::RELATIVE);
-        frame->setChildPosition(text, sf::Vector2f(0,.5), sui::FrameLayout::RELATIVE, sui::FrameLayout::RELATIVE);
-        
         vbox->addChild(frame);
     };
     
@@ -78,39 +81,41 @@ TableLayout::TableLayout(sui::Theme &theme) : BoxLayout(theme, sui::BoxLayout::H
     addText("Health");
     
     
-    add_button = new sui::Button(theme);
+    add_button = new sui::Button();
     addChild(add_button);
-    add_button->setText("+");
-    add_button->setNumberProperty("fontSize", 36);
-    add_button->updateTheme();
-    add_button->setTextAlign(sui::ORIGIN_MIDDLE, sui::ORIGIN_MIDDLE);
+    add_button->setProperty("text", sui::Property::make<sf::String>("+"));
+    add_button->setProperty("fontSize", sui::Property::make(36.f));
+    add_button->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
+    add_button->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
+    add_button->setProperty("outlineThickness", sui::Property::make(0.f));
+    add_button->setProperty("boxSize", sui::Property::make(sf::Vector2f(button_width, 1)));
+    add_button->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::ABSOLUTE));
+    add_button->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
+    add_button->setProperty("onClickedDown", sui::Property::makeFunc([this](){
+        addColumn();
+        onAdded();
+    }));
+    
     
     shouldAutoSort = false;
     
-    setLineColors(sf::Color(0,0,0,255));
-    
-    lockLocation(true);
-    lockSize(true);
-}
-void TableLayout::setLineThickness(float thickness) {
-    setPadding(thickness);
-    for(auto &c : getChildren()) {
-        static_cast<sui::BoxLayout *>(c)->setPadding(thickness);
-    }
+    setProperty("outlineColor", sui::Property::make(sf::Color(0,0,0,255)));
 }
 
 void TableLayout::addColumn() {
-    BoxLayout *vbox = new BoxLayout(getTheme(), sui::BoxLayout::VERTICAL);
+    BoxLayout *vbox = new BoxLayout();
     insertChild(vbox, getChildren().size()-1);
-    setChildSize(vbox, sf::Vector2f(column_width,1), sui::BoxLayout::ABSOLUTE, sui::BoxLayout::RELATIVE);
+    vbox->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
+    vbox->setProperty("boxScale", sui::Property::make(sf::Vector2f(column_width,1)));
+    vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
     
     for(unsigned int i = 0;i < 4; i++) {
-        sui::TextField *textfield = new sui::TextField(getTheme());
-        
+        sui::TextField *textfield = new sui::TextField();
+        textfield->setProperty("outlineThickness", sui::Property::make(0.f));
         if(i == 1 || i == 2)
-            textfield->setOnChanged([this](){
+            textfield->setProperty("onChanged", sui::Property::makeFunc([this](){
                 autoSort();
-            });
+            }));
         vbox->addChild(textfield);
     }
 }
@@ -120,12 +125,12 @@ void TableLayout::autoSort() {
     }
 }
 void TableLayout::sort() {
-    std::sort(getChildren().begin()+1, getChildren().end()-1,
+    std::sort(mChildren.begin()+1, mChildren.end()-1,
         [](sui::Widget *i, sui::Widget *j){
             const sui::Widget *text_field_roll_i = static_cast<sui::BoxLayout *>(i)->getChildren()[1];
             const sui::Widget *text_field_mod_i = static_cast<sui::BoxLayout *>(i)->getChildren()[2];
-            const std::string roll_string_i = static_cast<const sui::TextField *>(text_field_roll_i)->getText().toAnsiString();
-            const std::string mod_string_i = static_cast<const sui::TextField *>(text_field_mod_i)->getText().toAnsiString();
+            const std::string roll_string_i = text_field_roll_i->getProperty("text").as<sf::String>().toAnsiString();
+            const std::string mod_string_i = text_field_mod_i->getProperty("text").as<sf::String>().toAnsiString();
             int roll_i;
             int mod_i;
             try {
@@ -141,8 +146,8 @@ void TableLayout::sort() {
             
             const sui::Widget *text_field_roll_j = static_cast<sui::BoxLayout *>(j)->getChildren()[1];
             const sui::Widget *text_field_mod_j = static_cast<sui::BoxLayout *>(j)->getChildren()[2];
-            const std::string roll_string_j = static_cast<const sui::TextField *>(text_field_roll_j)->getText().toAnsiString();
-            const std::string mod_string_j = static_cast<const sui::TextField *>(text_field_mod_j)->getText().toAnsiString();
+            const std::string roll_string_j = text_field_roll_j->getProperty("text").as<sf::String>().toAnsiString();
+            const std::string mod_string_j = text_field_mod_j->getProperty("text").as<sf::String>().toAnsiString();
             int roll_j;
             int mod_j;
             try {
@@ -170,18 +175,11 @@ void TableLayout::sort() {
                 }
             }
         });
-    layoutChanged();
+    update();
 }
 
 float TableLayout::getUsedWidth() {
     return (getChildren().size()-2)*column_width + button_width + text_width;
 }
 
-void TableLayout::layoutChanged() {
-    lockLocation(false);
-    lockSize(false);
-    BoxLayout::layoutChanged();
-    lockLocation(true);
-    lockSize(true);
-}
 

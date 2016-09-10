@@ -8,29 +8,31 @@
 namespace sui {
     class CheckBox : public Widget {
     public:
-        CheckBox(Theme &theme);
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual bool handleInput(sf::Event e);
-        
-        void setOnToggled(std::function<void()> func);
-        void setOnToggledOn(std::function<void()> func);
-        void setOnToggledOff(std::function<void()> func);
+        CheckBox();
 
-        // if theme was changed then call this function to update it!
-        void updateTheme();
-        
-        virtual void layoutChanged();
-        virtual std::string getThemeObjectType();
+    protected:
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
+        virtual void onInput(sf::Event e);
+        virtual void onUpdate();
     private:
         sf::RectangleShape mCrossShape1; // two boxes to a cross
         sf::RectangleShape mCrossShape2; // two boxes to a cross
         sf::RectangleShape mRectangleShape;
-
+        
+        void onToggled() {
+            const Property &p = getProperty("onToggled");
+            if(p) p.asFunc()();
+        }
+        void onToggledOn() {
+            const Property &p = getProperty("onToggledOn");
+            if(p) p.asFunc()();
+        }
+        void onToggledOff() {
+            const Property &p = getProperty("onToggledOff");
+            if(p) p.asFunc()();
+        }
+        
         bool mState;
-
-        std::function<void()> mOnToggled;
-        std::function<void()> mOnToggledOn;
-        std::function<void()> mOnToggledOff;
         
         void updateFillColors();
     };

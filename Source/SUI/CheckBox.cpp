@@ -1,13 +1,11 @@
 #include <SUI/CheckBox.hpp>
 
 namespace sui {
-    CheckBox::CheckBox(Theme &theme) : Widget(theme) {
+    CheckBox::CheckBox() : Widget() {
         mState = false;
-        updateTheme();
-        updateFillColors();
     }
     
-    void CheckBox::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    void CheckBox::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mRectangleShape, states);
         if(mState) {
             target.draw(mCrossShape1, states);
@@ -15,44 +13,27 @@ namespace sui {
         }
     }
     
-    bool CheckBox::handleInput(sf::Event e) {
+    void CheckBox::onInput(sf::Event e) {
         if(e.type == sf::Event::MouseButtonPressed) {
-           const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
-           if(getGlobalBounds().contains(mousePos)) {
-               mState = !mState;
-               if(mOnToggled) {
-                   mOnToggled();
-               }
-               if(mState && mOnToggledOn) {
-                   mOnToggledOn();
-               }
-               if(!mState && mOnToggledOff) {
-                   mOnToggledOff();
-               }
-           }
-       }
-    }
-    
-    void CheckBox::setOnToggled(std::function<void()> func) {
-        mOnToggled = func;
-    }
-    void CheckBox::setOnToggledOn(std::function<void()> func) {
-        mOnToggledOn = func;
-    }
-    void CheckBox::setOnToggledOff(std::function<void()> func) {
-        mOnToggledOff = func;
+            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
+            if(getGlobalBounds().contains(mousePos)) {
+                mState = !mState;
+                onToggled();
+                if(mState) {
+                    onToggledOn();
+                }
+                if(!mState) {
+                    onToggledOff();
+                }
+            }
+        }
     }
 
-    void CheckBox::updateTheme() {
-        layoutChanged();
-        updateFillColors();
-    }
-    
-    void CheckBox::layoutChanged() {
+    void CheckBox::onUpdate() {
         const float left = getGlobalBounds().left;
         const float top = getGlobalBounds().top;
         constexpr float sqrt_2 = 1.41421356237;
-        const float bar_width = getNumberProperty("outlineThickness");
+        const float bar_width = getProperty("outlineThickness").as<float>();
         mCrossShape1.setSize(sf::Vector2f(getSize().x, bar_width));
         mCrossShape1.setOrigin(sf::Vector2f(0, bar_width/2.f));
         mCrossShape1.setPosition(sf::Vector2f(left+getSize().x/2-getSize().x/(sqrt_2*2), top+getSize().y/2-getSize().y/(sqrt_2*2)));
@@ -65,14 +46,14 @@ namespace sui {
         
         mRectangleShape.setPosition(sf::Vector2f(left, top));
         mRectangleShape.setSize(getSize());
-    }
-    std::string CheckBox::getThemeObjectType() {
-        return "sui::CheckBox";
+        
+        
+        updateFillColors();
     }
     
     void CheckBox::updateFillColors() {
         mRectangleShape.setFillColor(sf::Color(0,0,0,255));
-        mRectangleShape.setOutlineThickness(-getNumberProperty("outlineThickness"));
+        mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
         mRectangleShape.setOutlineColor(sf::Color(255,255,255,255));
     }
 }

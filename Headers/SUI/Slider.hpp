@@ -12,28 +12,43 @@ namespace sui {
             HORIZONTAL = 0,
             VERTICAL
         };
-        Slider(Theme &theme, BOX_DIRECTION direction = HORIZONTAL);
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual bool handleInput(sf::Event e);
-        
-        void setOnClickedDown(std::function<void()> func);
-        void setOnClickedUp(std::function<void()> func);
-        void setOnValueChanged(std::function<void()> func);
-        
-        // if theme was changed then call this function to update it!
-        void updateTheme();
-        
-        void setRange(float min, float max);
-        
-        float getValue();
-        void setValue(float value);
-        
-        virtual void layoutChanged();
-        virtual std::string getThemeObjectType();
+        Slider();
+    protected:
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
+        virtual void onInput(sf::Event e);
+        virtual void onUpdate();
     private:
         sf::Vector2f getSliderSize();
         sf::Vector2f getBarSize();
         void sliderChanged();
+        
+        void onClickedDown() {
+            const Property &p = getProperty("onClickedDown");
+            if(p) p.asFunc()();
+        }
+        void onClickedUp() {
+            const Property &p = getProperty("onClickedUp");
+            if(p) p.asFunc()();
+        }
+        void onValueChanged() {
+            const Property &p = getProperty("onValueChanged");
+            if(p) p.asFunc()();
+        }
+        float getMax() {
+            const Property &p = getProperty("max");
+            if(p) return p.as<float>();
+            return 1;
+        }
+        float getMin() {
+            const Property &p = getProperty("min");
+            if(p) return p.as<float>();
+            return 0;
+        }
+        BOX_DIRECTION getDirection() {
+            const Property &p = getProperty("sliderDirection");
+            if(p) return p.as<BOX_DIRECTION>();
+            return HORIZONTAL;
+        }
         
         // the button you click on
         sf::RectangleShape mRectangleShape;
@@ -43,14 +58,6 @@ namespace sui {
         
         // value in the range [0,1]
         float mSliderPosition;
-        float mMax;
-        float mMin;
-        
-        BOX_DIRECTION mDirection;
-        
-        std::function<void()> mOnClickedDown;
-        std::function<void()> mOnClickedUp;
-        std::function<void()> mOnChanged;
         
         bool mClicked;
     };

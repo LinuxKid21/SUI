@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 namespace sui {
+    /* children may have boxSize, scaleTypeX and scaleTypeY*/
     class BoxLayout : public Container {
     protected:
         struct BoxChildData;
@@ -13,7 +14,7 @@ namespace sui {
         // is relative to the size of the box and not to the other elements.
         // This means it has a valid range of [0,1] and everything else will be
         // capped to that
-        enum DIRECTION_TYPE {
+        enum SCALE_TYPE {
             RELATIVE = 0, // relative size(e.g. twice as large as others)
             ABSOLUTE // absolute size(e.g. 200px exactly)
         };
@@ -21,31 +22,35 @@ namespace sui {
             HORIZONTAL = 0,
             VERTICAL
         };
-        BoxLayout(Theme &theme, BOX_DIRECTION direction);
+        BoxLayout();
         
-        void setDirection(BOX_DIRECTION direction);
-        void setPadding(float padding);
-        
-        bool setChildSize(Widget *child, sf::Vector2f size, DIRECTION_TYPE x_dir, DIRECTION_TYPE y_dir);
-        
-        virtual void layoutChanged();
-
-        virtual Widget *addChild(Widget *widget);
-        virtual Widget *insertChild(Widget *widget, unsigned int pos);
-        virtual Widget *removeChild(Widget *widget);
     protected:
-        void initiateChildData(void **data);
+        virtual void onUpdate();
         
-        BOX_DIRECTION mDirection;
-        float mPadding;
-        
-        BoxChildData *getBoxChildData(Widget *child);
-        
-        // extra data to add to children
-        struct BoxChildData {
-            sf::Vector2f size;
-            DIRECTION_TYPE x;
-            DIRECTION_TYPE y;
-        };
+        float getPadding() {
+            const Property &p = getProperty("padding");
+            if(p) return p.as<float>();
+            return 0;
+        }
+        BOX_DIRECTION getDirection() {
+            const Property &p = getProperty("direction");
+            if(p) return p.as<BOX_DIRECTION>();
+            return HORIZONTAL;
+        }
+        SCALE_TYPE getChildDirectionTypeX(Widget *w) {
+            const Property &p = w->getProperty("scaleTypeX");
+            if(p) return p.as<SCALE_TYPE>();
+            return RELATIVE;
+        }
+        SCALE_TYPE getChildDirectionTypeY(Widget *w) {
+            const Property &p = w->getProperty("scaleTypeY");
+            if(p) return p.as<SCALE_TYPE>();
+            return RELATIVE;
+        }
+        sf::Vector2f getChildSize(Widget *w) {
+            const Property &p = w->getProperty("boxSize");
+            if(p) return p.as<sf::Vector2f>();
+            return sf::Vector2f(1,1);
+        }
     };
 }

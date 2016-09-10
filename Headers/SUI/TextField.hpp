@@ -8,27 +8,15 @@
 namespace sui {
     class TextField : public Widget {
     public:
-        TextField(Theme &theme);
-        void setText(sf::String str);
-        sf::String getText() const;
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual bool handleInput(sf::Event e);
-        
-        // if theme was changed then call this function to update it!
-        void updateTheme();
-        
-        void setOnEntered(std::function<void()> func);
-        void setOnExited(std::function<void()> func);
-        void setOnActivated(std::function<void()> func);
-        void setOnDeactivated(std::function<void()> func);
-        void setOnChanged(std::function<void()> func);
-        
-        virtual void layoutChanged();
-        virtual std::string getThemeObjectType();
+        TextField();
+
+    protected:
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
+        virtual void onInput(sf::Event e);
+        virtual void onUpdate();
     private:
         sf::RectangleShape mRectangleShape;
         sf::Text mText;
-        sf::String mStr;
         
         sf::RectangleShape mCursorShape;
         sf::RectangleShape mHighlightShape;
@@ -46,11 +34,38 @@ namespace sui {
         void moveCursorLeft(bool shift);
         void moveCursorRight(bool shift);
         
-        std::function<void()> mOnEntered;
-        std::function<void()> mOnExited;
-        std::function<void()> mOnActivated;
-        std::function<void()> mOnDeactivated;
-        std::function<void()> mOnChanged;
+        
+        void onEntered() {
+            const Property &p = getProperty("onEntered");
+            if(p) p.asFunc()();
+        }
+        void onExited() {
+            const Property &p = getProperty("onExited");
+            if(p) p.asFunc()();
+        }
+        void onActivated() {
+            const Property &p = getProperty("onActivated");
+            if(p) p.asFunc()();
+        }
+        void onDeactivated() {
+            const Property &p = getProperty("onDeactivated");
+            if(p) p.asFunc()();
+        }
+        void onChanged() {
+            const Property &p = getProperty("onChanged");
+            if(p) p.asFunc()();
+        }
+        float getTextPadding() {
+            const Property &p = getProperty("textPadding");
+            if(p) return p.as<float>();
+            return 5;
+        }
+        // assumes text has been set!
+        sf::String &getText() {
+            const Property &p = getProperty("text");
+            return *p.asPointer<sf::String>();
+        }
+        
         
         // x_diff is how far away the cursor is in the x direction from start of the textbox
         int findNearestCursorPoint(float x_diff);
@@ -62,8 +77,5 @@ namespace sui {
         void updateCursor();
         
         void deleteInsideCursor();
-        
-        // how far from the left the text is
-        static const int text_padding = 5;
     };
 }

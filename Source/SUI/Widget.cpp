@@ -2,25 +2,41 @@
 #include <SUI/Container.hpp>
 #include <iostream>
 namespace sui {
-    int Widget::current_id = 0;
-    Widget::Widget(Theme &theme) : mTheme(&theme) {
+    Widget::Widget() {
         mInvalidGlobalPosition = true;
         mParent = nullptr;
         
-        mOriginX = getPreferredOriginX();
-        mOriginY = getPreferredOriginY();
+        mOriginX = ORIGIN_START;
+        mOriginY = ORIGIN_START;
         
         // something default...
         mLocalPosition = sf::Vector2f(0,0);
         mLocalSize = sf::Vector2f(0,0);
         
-        mContainerData = nullptr;
-        id = current_id++;
+        mVisible = true;
         
-        Theme::registerType(getThemeObject(), getThemeObjectType());
+        mContainerData = nullptr;
     }
     Widget::~Widget() {
         ;
+    }
+    
+    void Widget::handleInput(sf::Event e) {
+        if(!mVisible) return;
+        onInput(e);
+    }
+    void Widget::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+        if(!mVisible) return;
+        onDraw(target, states);
+    }
+    void Widget::update() {
+        mVisible = getProperty("visible") ? getProperty("visible").as<bool>() : true;
+        if(!mVisible) return;
+        _onUpdate();
+    }
+    // overriden in Container
+    void Widget::_onUpdate() {
+        onUpdate();
     }
     
     bool Widget::setPosition(sf::Vector2f pos) {
@@ -35,7 +51,7 @@ namespace sui {
     sf::Vector2f Widget::getLocalPosition() const {
         return mLocalPosition;
     }
-    sf::Vector2f Widget::getGlobalPosition() {
+    sf::Vector2f Widget::getGlobalPosition() const {
         updateGlobalPosition();
         return mGlobalPosition;
     }
@@ -79,70 +95,77 @@ namespace sui {
     }
     
     
-    Widget *Widget::getParent() {
+    Container *Widget::getParent() {
         return mParent;
     }
     
-    void Widget::layoutChanged() {
-        ;
+    const Property &Widget::getProperty(const std::string key) const {
+        // traverse up the tree to find the property
+        const Widget *iter = this;
+        while(iter) {
+            if(iter->mProperties.find(key) != iter->mProperties.end()) {
+                return iter->mProperties.at(key);
+            }
+            iter = iter->mParent;
+        }
+        return nullProperty;
     }
-    
-    std::string Widget::getThemeObject() {
-        return std::string("widget_gen_id@") + std::to_string(id);
+    void Widget::setProperty(const std::string key, const Property &prop) {
+        mProperties[key] = prop;
+        onPropertyChanged(key);
     }
-    std::string Widget::getThemeObjectType() {
-        return "sui::Widget";
+    bool Widget::removeProperty(const std::string key) {
+        return mProperties.erase(key) == 1;
     }
-    
-    void Widget::setNumberProperty(const std::string property, float value) {
-        mTheme->setNumberProperty(getThemeObject() + "." + property, value);
+    void Widget::clearAllProperties() {
+        mProperties.clear();
     }
-    void Widget::setBoolProperty(const std::string property, bool value) {
-        mTheme->setBoolProperty(getThemeObject() + "." + property, value);
+
+    sf::Vector2f Widget::getLocalTopLeftCorner() const {
+        sf::Vector2f pos;
+        const float x = getLocalPosition().x;
+        const float y = getLocalPosition().y;
+        const float w = getSize().x;
+        const float h = getSize().y;
+        if(mOriginX == ORIGIN_START) {
+            pos.x = x;
+        } else if(mOriginX == ORIGIN_MIDDLE) {
+            pos.x = x-w/2.f;
+        } else if(mOriginX == ORIGIN_END) {
+            pos.x = x-w;
+        }
+        
+        if(mOriginY == ORIGIN_START) {
+            pos.y = y;
+        } else if(mOriginY == ORIGIN_MIDDLE) {
+            pos.y = y-h/2.f;
+        } else if(mOriginY == ORIGIN_END) {
+            pos.y = y-h;
+        }
+        return pos;
     }
-    void Widget::setColorProperty(const std::string property, sf::Color value) {
-        mTheme->setColorProperty(getThemeObject() + "." + property, value);
-    }
-    void Widget::setVector2fProperty(const std::string property, sf::Vector2f value) {
-        mTheme->setVector2fProperty(getThemeObject() + "." + property, value);
-    }
-    void Widget::setOriginProperty(const std::string property, ORIGIN value) {
-        mTheme->setOriginProperty(getThemeObject() + "." + property, value);
-    }
-    void Widget::setStringProperty(const std::string property, sf::String value) {
-        mTheme->setStringProperty(getThemeObject() + "." + property, value);
-    }
-    void Widget::setFontProperty(const std::string property, std::shared_ptr<sf::Font> value) {
-        mTheme->setFontProperty(getThemeObject() + "." + property, value);
-    }
-    
-    
-    float Widget::getNumberProperty(const std::string property) {
-        return mTheme->getNumberProperty(getThemeObject() + "." + property);
-    }
-    bool Widget::getBoolProperty(const std::string property) {
-        return mTheme->getBoolProperty(getThemeObject() + "." + property);
-    }
-    sf::Color Widget::getColorProperty(const std::string property) {
-        return mTheme->getColorProperty(getThemeObject() + "." + property);
-    }
-    sf::Vector2f Widget::getVector2fProperty(const std::string property) {
-        return mTheme->getVector2fProperty(getThemeObject() + "." + property);
-    }
-    ORIGIN Widget::getOriginProperty(const std::string property) {
-        return mTheme->getOriginProperty(getThemeObject() + "." + property);
-    }
-    sf::String Widget::getStringProperty(const std::string property) {
-        return mTheme->getStringProperty(getThemeObject() + "." + property);
-    }
-    std::shared_ptr<sf::Font> Widget::getFontProperty(const std::string property) {
-        return mTheme->getFontProperty(getThemeObject() + "." + property);
-    }
-    std::shared_ptr<void> Widget::getSharedProperty(const std::string property) {
-        return mTheme->getSharedProperty(getThemeObject() + "." + property);
-    }
-    Theme &Widget::getTheme() {
-        return *mTheme;
+    sf::Vector2f Widget::getGlobalTopLeftCorner() const {
+        sf::Vector2f pos;
+        const float x = getGlobalPosition().x;
+        const float y = getGlobalPosition().y;
+        const float w = getSize().x;
+        const float h = getSize().y;
+        if(mOriginX == ORIGIN_START) {
+            pos.x = x;
+        } else if(mOriginX == ORIGIN_MIDDLE) {
+            pos.x = x-w/2.f;
+        } else if(mOriginX == ORIGIN_END) {
+            pos.x = x-w;
+        }
+        
+        if(mOriginY == ORIGIN_START) {
+            pos.y = y;
+        } else if(mOriginY == ORIGIN_MIDDLE) {
+            pos.y = y-h/2.f;
+        } else if(mOriginY == ORIGIN_END) {
+            pos.y = y-h;
+        }
+        return pos;
     }
     
     sf::FloatRect Widget::_getBoundsGeneric(const float x, const float y, const float w, const float h) const {
@@ -173,7 +196,7 @@ namespace sui {
     }
     
     
-    void Widget::updateGlobalPosition() {
+    void Widget::updateGlobalPosition() const {
         if(mInvalidGlobalPosition) {
             mGlobalPosition = mLocalPosition;
             if(mParent) {
@@ -182,29 +205,4 @@ namespace sui {
             mInvalidGlobalPosition = false;
         }
     }
-    
-    ORIGIN Widget::getPreferredOriginX() const {
-        if(mParent) {
-            return mParent->getPreferredChildOriginX();
-        }
-        return ORIGIN_START;
-    }
-    
-    ORIGIN Widget::getPreferredChildOriginX() const {
-        return ORIGIN_START;
-    }
-    
-    
-    ORIGIN Widget::getPreferredOriginY() const {
-        if(mParent) {
-            return mParent->getPreferredChildOriginY();
-        }
-        return ORIGIN_START;
-    }
-    
-    ORIGIN Widget::getPreferredChildOriginY() const {
-        return ORIGIN_START;
-    }
-    
-    
 }

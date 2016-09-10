@@ -3,35 +3,30 @@
 
 
 namespace sui {
-    Text::Text(Theme &theme) : Widget(theme) {
+    Text::Text() : Widget() {
         mText = sf::Text();
-        mStr = "";
-        mText.setString(mStr);
-        updateTheme();
+        mText.setString("test");
     }
-    void Text::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    void Text::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mText, states);
     }
-    bool Text::handleInput(sf::Event e) {
-        return false; // no input handling here
-    }
-    void Text::setText(const sf::String str) {
-        mStr = str;
-        insureTextFits();
-    }
-    void Text::updateTheme() {
-        mText.setFont(*getFontProperty("font"));
-        layoutChanged();
+    void Text::onInput(sf::Event e) {
+        return; // no input handling here
     }
     
-    void Text::layoutChanged() {
+    void Text::onUpdate() {
+        mText.setFont(*getProperty("font").as<sf::Font *>());
         mText.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
+        mText.setColor(getProperty("textColor").as<sf::Color>());
         insureTextFits();
     }
-    std::string Text::getThemeObject() {
-        return "sui::Text";
-    }
+    
     void Text::insureTextFits() {
+        sf::String str = getProperty("text").as<sf::String>();
+        
+        // assume it fits until it doesn't :)
+        mText.setString(str);
+        
         if(getSize().x == 0) {
             return;
         }
@@ -39,19 +34,17 @@ namespace sui {
         mText.setCharacterSize(font_size);
         setTextOrigin(mText, ORIGIN_START, ORIGIN_START, 'J');
 
-        // assume it fits until it doesn't :)
-        mText.setString(mStr);
         
         // calculate how much text fits.
         float total_space = 0;
-        for(unsigned int i = 0;i < mStr.getSize(); i++) {
-            auto &glyph = mText.getFont()->getGlyph(mStr[i], font_size, false);
+        for(unsigned int i = 0;i < str.getSize(); i++) {
+            auto &glyph = mText.getFont()->getGlyph(str[i], font_size, false);
             total_space += glyph.advance;
             if(total_space > getSize().x) {
                 total_space += mText.getFont()->getGlyph('.', font_size, false).advance*3; // make room for an ellipse
                 int j = i;
                 for(; j >= 0; j--) {
-                    total_space -= mText.getFont()->getGlyph(mStr[j], font_size, false).advance;
+                    total_space -= mText.getFont()->getGlyph(str[j], font_size, false).advance;
                     if(total_space <= getSize().x) {
                         break;
                     }
@@ -61,14 +54,14 @@ namespace sui {
                     mText.setString("");
                     return;
                 }
-                sf::String str;
+                sf::String new_str;
                 for(unsigned int k = 0;k < j; k++) {
-                    str += mStr[k];
+                    new_str += str[k];
                 }
-                str += '.';
-                str += '.';
-                str += '.';
-                mText.setString(str);
+                new_str += '.';
+                new_str += '.';
+                new_str += '.';
+                mText.setString(new_str);
                 return;
             }
         }

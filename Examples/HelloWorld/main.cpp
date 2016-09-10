@@ -1,21 +1,24 @@
 #include <SUI/SUI.hpp>
-
 #include <iostream>
 int main() {
-    // initiate the SUI system
-    sui::initiateSUI();
-    
     const int window_width = 700;
     const int window_height = 300;
 
-    // Create a theme. This is shared by all Widgets and must remain in scope
-    // for the duration of the application
-    sui::Theme theme;
-    theme.loadDefaults("arial.ttf");
-
     // create a button with the theme from above
-    auto button = new sui::Button(theme);
-    button->setText("Hello World");
+    auto button = new sui::Button();
+    
+    sf::Font font = sf::Font();
+    font.loadFromFile("arial.ttf");
+    button->setProperty("font", sui::Property::make(&font));
+    button->setProperty("outlineThickness", sui::Property::make(2.f));
+    button->setProperty("fillColor", sui::Property::make(sf::Color(255,255,255,255)));
+    button->setProperty("fillColorHovered", sui::Property::make(sf::Color(200,200,200,255)));
+    button->setProperty("fillColorClicked", sui::Property::make(sf::Color(100,100,100,255)));
+    button->setProperty("textColor", sui::Property::make(sf::Color(0,0,0,255)));
+    button->setProperty("outlineColor", sui::Property::make(sf::Color(0,255,0,255)));
+    button->setProperty("fontSize", sui::Property::make(24.f));
+
+    button->setProperty("text", sui::Property::make<sf::String>("Hello World"));
 
     // place the buttons in the very center of the screen
     button->setPosition(sf::Vector2f(window_width/2,window_height/2));
@@ -31,29 +34,30 @@ int main() {
     // put the text in the middle.
     // sui::ORIGIN_START places the text at the left for x direction and top for y
     // sui::ORIGIN_END places the text at the right for x direction and bottom for y
-    button->setTextAlign(sui::ORIGIN_MIDDLE, sui::ORIGIN_MIDDLE);
+    button->setProperty("textOriginX", sui::Property::make(sui::ORIGIN_MIDDLE));
+    button->setProperty("textOriginY", sui::Property::make(sui::ORIGIN_MIDDLE));
     
     // after everything is set up tell the button to update the graphics.
     // this must be called after almost any function that makes a visible
     // difference on the screen. For efficiency many graphical parameters
     // can all be set before calculating the graphical components
-    button->layoutChanged();
+    button->update();
     
     // set actions that the button will do upon certain events.
     // note: all functions that take a callback use an std::function
     // meaning you can use lambdas as done below
-    button->setOnEntered([](){
+    button->setProperty("onEntered", sui::Property::makeFunc([](){
         std::cout << "Button Entered!\n";
-    });
-    button->setOnExited([](){
+    }));
+    button->setProperty("onExited", sui::Property::makeFunc([](){
         std::cout << "Button Exited!\n";
-    });
-    button->setOnClickedDown([](){
+    }));
+    button->setProperty("onClickedDown", sui::Property::makeFunc([](){
         std::cout << "Button Clicked Down!\n";
-    });
-    button->setOnClickedUp([](){
+    }));
+    button->setProperty("onClickedUp", sui::Property::makeFunc([](){
         std::cout << "Button Clicked Up!\n";
-    });
+    }));
 
 
     sf::RenderWindow window(sf::VideoMode(window_width, window_height, 32), "SUI demo", sf::Style::Default);

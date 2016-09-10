@@ -2,54 +2,38 @@
 #include <SUI/Utility.hpp>
 
 namespace sui {
-    Button::Button(Theme &theme) : Widget(theme) {
+    Button::Button() : Widget() {
         mText = sf::Text();
         mText.setString("");
         mHovered = false;
         mClicked = false;
-        mTextOriginX = ORIGIN_START;
-        mTextOriginY = ORIGIN_START;
         mRectangleShape = sf::RectangleShape();
-        updateTheme();
     }
     
-    void Button::draw(sf::RenderTarget& target, sf::RenderStates states) const
-    {
+    void Button::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mRectangleShape, states);
         target.draw(mText, states);
     }
     
-    bool Button::handleInput(sf::Event e) {
-        bool r = false;
+    void Button::onInput(sf::Event e) {
         if(e.type == sf::Event::MouseMoved) {
             const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
             if(getGlobalBounds().contains(mousePos)) {
                 // call only while entering, not constantly while inside
-                if(mOnEntered && !mHovered) {
-                    mOnEntered();
+                if(!mHovered) {
+                    onEntered();
                 }
 
                 mHovered = true;
-                r = true;
             } else if(mHovered) {
-                if(mOnExited) {
-                    mOnExited();
-                }
+                onExited();
                 mHovered = false;
-            }
-            
-            // if clicking then I think all move signals should be stolen
-            if(mClicked) {
-                r = true;
             }
         } else if(e.type == sf::Event::MouseButtonPressed) {
             const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
             if(getGlobalBounds().contains(mousePos)) {
                 mClicked = true;
-                r = true;
-                if(mOnClickedDown) {
-                    mOnClickedDown();
-                }
+                onClickedDown();
             }
         } else if(e.type == sf::Event::MouseButtonReleased && mClicked) {
             const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
@@ -60,73 +44,44 @@ namespace sui {
             }
             mClicked = false;
             
-            if(mOnClickedUp) {
-                mOnClickedUp();
-            }
+            onClickedUp();
         }
         updateFillColors();
-        return r;
-    }
-    void Button::setText(sf::String str) {
-        mText.setString(str);
-        updateText();
     }
     
-    void Button::setOnEntered(std::function<void()> func) {
-        mOnEntered = func;
-    }
-    void Button::setOnExited(std::function<void()> func) {
-        mOnExited = func;
-    }
-    void Button::setOnClickedDown(std::function<void()> func) {
-        mOnClickedDown = func;
-    }
-    void Button::setOnClickedUp(std::function<void()> func) {
-        mOnClickedUp = func;
-    }
     
-    void Button::updateTheme() {
-        mRectangleShape.setOutlineColor(getColorProperty("outlineColor"));
-        mRectangleShape.setOutlineThickness(getNumberProperty("outlineThickness"));
-        mText.setFont(*getFontProperty("font"));
-        mText.setColor(getColorProperty("textColor"));
-        mText.setCharacterSize(getNumberProperty("fontSize"));
+    void Button::onUpdate() {
+        mText.setString(getText());
+        mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
+        mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
+        mText.setFont(*getProperty("font").as<sf::Font *>());
+        mText.setColor(getProperty("textColor").as<sf::Color>());
+        mText.setCharacterSize(getProperty("fontSize").as<float>());
         updateFillColors();
-        layoutChanged();
-    }
-    
-    void Button::setTextAlign(ORIGIN textOriginX, ORIGIN textOriginY) {
-        mTextOriginX = textOriginX;
-        mTextOriginY = textOriginY;
-        updateText();
-    }
-    
-    void Button::layoutChanged() {
-        Widget::layoutChanged();
-        float outlineThickness = getNumberProperty("outlineThickness");
+        
+        
         mRectangleShape.setRotation(0); // somewhere rotation was somehow changed sometimes!!! FIXME
-        mRectangleShape.setPosition(sf::Vector2f(getGlobalBounds().left+outlineThickness, getGlobalBounds().top+outlineThickness));
-        mRectangleShape.setSize(getSize()-sf::Vector2f(2*outlineThickness, 2*outlineThickness));
+        mRectangleShape.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
+        mRectangleShape.setSize(getSize());
         updateText();
-    }
-    std::string Button::getThemeObjectType() {
-        return "sui::Button";
     }
     
     void Button::updateFillColors() {
         if(mClicked) {
-            mRectangleShape.setFillColor(getColorProperty("fillColorClicked"));
+            mRectangleShape.setFillColor(getProperty("fillColorClicked").as<sf::Color>());
         } else if(mHovered) {
-            mRectangleShape.setFillColor(getColorProperty("fillColorHovered"));
+            mRectangleShape.setFillColor(getProperty("fillColorHovered").as<sf::Color>());
         } else {
-            mRectangleShape.setFillColor(getColorProperty("fillColor"));
+            mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
         }
     }
     void Button::updateText() {
-        setTextOrigin(mText, mTextOriginX, mTextOriginY, 'X');
+        ORIGIN textOriginX = getTextOriginX();
+        ORIGIN textOriginY = getTextOriginY();
+        setTextOrigin(mText, textOriginX, textOriginY, 'X');
         int x;
         int y;
-        switch(mTextOriginX) {
+        switch(textOriginX) {
             case ORIGIN_START:
                 x = getGlobalBounds().left;
                 break;
@@ -141,7 +96,7 @@ namespace sui {
         }
         
         
-        switch(mTextOriginY) {
+        switch(textOriginY) {
             case ORIGIN_START:
                 y = getGlobalBounds().top;
                 break;

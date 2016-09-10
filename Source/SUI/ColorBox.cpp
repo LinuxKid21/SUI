@@ -2,24 +2,20 @@
 
 
 namespace sui {
-    ColorBox::ColorBox(Theme &theme) : Widget(theme) {
+    ColorBox::ColorBox() : Widget() {
         mRectangleShape = sf::RectangleShape();
-        setColor(sf::Color(0,0,0,255));
     }
     
-    void ColorBox::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    void ColorBox::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mRectangleShape, states);
     }
-    bool ColorBox::handleInput(sf::Event e) {
-        return false;
+    void ColorBox::onInput(sf::Event e) {
+        return;
     }
-    void ColorBox::layoutChanged() {
+    void ColorBox::onUpdate() {
+        mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
         mRectangleShape.setPosition(getGlobalBounds().left, getGlobalBounds().top);
         mRectangleShape.setSize(getSize());
-    }
-    
-    void ColorBox::setColor(sf::Color color) {
-        mRectangleShape.setFillColor(color);
     }
 }
 

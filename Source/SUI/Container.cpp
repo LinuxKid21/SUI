@@ -1,9 +1,9 @@
 #include <SUI/Container.hpp>
 
 namespace sui {
-    Container::Container(Theme &theme) : Widget(theme) {
-        lockLocation(false);
-        lockSize(false);
+    Container::Container() : Widget() {
+        lockLocation(true);
+        lockSize(true);
     }
     Container::~Container() {
         for(unsigned int i = 0; i < mChildren.size(); i++) {
@@ -11,16 +11,38 @@ namespace sui {
         }
     }
     
-    bool Container::handleInput(sf::Event e) {
+    void Container::onInput(sf::Event e) {
         for(unsigned int i = 0; i < mChildren.size(); i++) {
-            mChildren[i]->handleInput(e);
+            mChildren[i]->onInput(e);
         }
-        return false;
     }
     
-    void Container::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    void Container::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         for(auto &child : mChildren) {
-            target.draw(*child, states);
+            child->onDraw(target, states);
+        }
+    }
+
+    void Container::_onUpdate() {
+        lockLocation(false);
+        lockSize(false);
+        onUpdate();
+        for(auto &child : mChildren) {
+            child->_onUpdate();
+        }
+        lockLocation(true);
+        lockSize(true);
+    }
+    void Container::onPropertyChanged(const std::string key) {
+        for(unsigned int i = 0; i < mChildren.size(); i++) {
+            const Widget *c = mChildren[i];
+            // recursively alert children that the property changed
+            // if if they don't have that property defined locally
+            // (because that property overrides this one for it so
+            // it didn't really change for it)
+            if(c->mProperties.find(key) == c->mProperties.end()) {
+                mChildren[i]->onPropertyChanged(key);
+            }
         }
     }
     
@@ -56,12 +78,6 @@ namespace sui {
         return nullptr;
     }
 
-    void Container::layoutChanged() {
-        Widget::layoutChanged();
-        for(auto &child : mChildren) {
-            child->layoutChanged();
-        }
-    }
     
     bool Container::childrenCanMove() {
         return !mLocLocked;
@@ -82,7 +98,7 @@ namespace sui {
     }
     
     
-    std::vector<Widget *> &Container::getChildren() {
+    const std::vector<Widget *> &Container::getChildren() {
         return mChildren;
     }
 

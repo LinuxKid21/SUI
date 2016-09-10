@@ -15,78 +15,66 @@ namespace sui {
         // container needs a few special priviledges
         friend class Container;
     public:
-        Widget(Theme &theme);
+        Widget();
         virtual ~Widget();
         
-        virtual bool handleInput(sf::Event e) = 0;
-        virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
+        void handleInput(sf::Event e);
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+        void update();
+        Container *getParent();
         
         // sets the local position and returns false if the parent did not consent permission
         bool setPosition(sf::Vector2f pos);
         sf::Vector2f getLocalPosition() const;
-        sf::Vector2f getGlobalPosition();
+        sf::Vector2f getGlobalPosition() const;
         
         // sets the local size and returns false if the parent did not consent permission
         bool setSize(sf::Vector2f size);
         sf::Vector2f getSize() const;
+        
+        sf::Vector2f getLocalTopLeftCorner() const;
+        sf::Vector2f getGlobalTopLeftCorner() const;
         
         // these are very helpful because they take origin into account for you.
         sf::FloatRect getLocalBounds() const;
         sf::FloatRect getGlobalBounds();
         
         bool setOrigin(ORIGIN originX, ORIGIN originY);
-        Widget *getParent();
         
-        virtual void layoutChanged();
+        const Property &getProperty(const std::string key) const;
+        void setProperty(const std::string key, const Property &prop);
+        bool removeProperty(const std::string key);
+        void clearAllProperties();
         
-        std::string getThemeObject();
+    protected:
+        virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
+        virtual void onInput(sf::Event e) = 0;
+        virtual void onUpdate() = 0;
+        virtual void onPropertyChanged(const std::string key) {}
         
-        virtual std::string getThemeObjectType();
+        ORIGIN mOriginX;
+        ORIGIN mOriginY;
         
-        
-        void setNumberProperty(const std::string property, float value);
-        void setBoolProperty(const std::string property, bool value);
-        void setColorProperty(const std::string property, sf::Color value);
-        void setVector2fProperty(const std::string property, sf::Vector2f value);
-        void setOriginProperty(const std::string property, ORIGIN value);
-        void setStringProperty(const std::string property, sf::String value);
-        void setFontProperty(const std::string property, std::shared_ptr<sf::Font> value);
-        template<class T>
-        void setVoidProperty(const std::string property, T *value) {
-            mTheme->setVoidProperty<T>(getThemeObject() + "." + property, value);
-        }
-        
-        
-        float getNumberProperty(const std::string property);
-        bool getBoolProperty(const std::string property);
-        sf::Color getColorProperty(const std::string property);
-        sf::Vector2f getVector2fProperty(const std::string property);
-        ORIGIN getOriginProperty(const std::string property);
-        sf::String getStringProperty(const std::string property);
-        std::shared_ptr<sf::Font> getFontProperty(const std::string property);
-        template<class T>
-        T getVoidProperty(const std::string property) {
-            return mTheme->getVoidProperty<T>(getThemeObject() + "." + property);
-        }
-        std::shared_ptr<void> getSharedProperty(const std::string property);
-        
-        Theme &getTheme();
     private:
+        Property nullProperty;
+        // necessary extra layer of complexity so container has some extra control nothing else needs
+        virtual void _onUpdate();
+        
         // helper for getLocalBounds and getGlobalBounds functions
         sf::FloatRect _getBoundsGeneric(const float x, const float y, const float w, const float h) const;
-    
+        
         Container *mParent;
         
         sf::Vector2f mLocalPosition;
         sf::Vector2f mLocalSize;
         
-        sf::Vector2f mGlobalPosition;
+        mutable sf::Vector2f mGlobalPosition;
         
         // setting this to true means mGlobalPosition will be recomputed next time getGlobalPosition is called
-        bool mInvalidGlobalPosition;
+        mutable bool mInvalidGlobalPosition;
         
-        // global position calculation(always calculated from the origin)
-        void updateGlobalPosition();
+        // global position calculation
+        void updateGlobalPosition() const;
         
         // containers almost always need some specific data it stores with its
         // widgets of all types so here's a void pointer!
@@ -94,22 +82,7 @@ namespace sui {
         // or to figure out sizes automatically.
         void *mContainerData;
         
-        int id;
-        static int current_id;
-        
-        Theme *mTheme;
-    protected:
-        ORIGIN mOriginX;
-        ORIGIN mOriginY;
-        
-        // I see no reason this should be virtual
-        ORIGIN getPreferredOriginX() const;
-        ORIGIN getPreferredOriginY() const;
-        
-        // override this to communicate the most desired origin of children widgets
-        // A table class might return the center of it's cell so it makes sense children
-        // have origin in center so they align well
-        virtual ORIGIN getPreferredChildOriginX() const;
-        virtual ORIGIN getPreferredChildOriginY() const;
+        bool mVisible;
+        std::map <std::string, Property> mProperties;
     };
 }

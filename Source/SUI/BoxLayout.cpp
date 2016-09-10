@@ -2,35 +2,11 @@
 
 
 namespace sui {
-    BoxLayout::BoxLayout(Theme &theme, BOX_DIRECTION direction) : Container(theme) {
-        mDirection = direction;
-        mPadding = 5;
-        
-        lockLocation(true);
-        lockSize(true);
+    BoxLayout::BoxLayout() : Container() {
+        ;
     }
     
-    void BoxLayout::setDirection(BOX_DIRECTION direction) {
-        mDirection = direction;
-    }
-    void BoxLayout::setPadding(float padding) {
-        mPadding = padding;
-    }
-    bool BoxLayout::setChildSize(Widget *child, sf::Vector2f size, DIRECTION_TYPE x_dir, DIRECTION_TYPE y_dir) {
-        if(isChild(child)) {
-            auto *data = getBoxChildData(child);
-            data->size = size;
-            data->x = x_dir;
-            data->y = y_dir;
-            return true;
-        }
-        return false;
-    }
-    
-    void BoxLayout::layoutChanged() {
-        lockLocation(false);
-        lockSize(false);
-
+    void BoxLayout::onUpdate() {
         float x;
         float y;
         sf::Vector2f s = getSize();
@@ -57,45 +33,43 @@ namespace sui {
                 y = -s.y;
                 break;
         }
-
-        const float marginSpaceStolen = mPadding*(getChildren().size() - 1.f);
+        const float padding = getPadding();
+        const float marginSpaceStolen = padding*(getChildren().size() - 1.f);
         
-        if(mDirection == HORIZONTAL) {
+        if(getDirection() == HORIZONTAL) {
             float total_static_width = 0;
             float total_standard_widths = 0;
             
             // computer standard width and total static width allocated
             for(auto &child : getChildren()) {
-                auto *data = getBoxChildData(child);
-                if(data->x == RELATIVE) {
-                    total_standard_widths += data->size.x;
+                if(getChildDirectionTypeX(child) == RELATIVE) {
+                    total_standard_widths += getChildSize(child).x;
                 } else {
-                    total_static_width += data->size.x;
+                    total_static_width += getChildSize(child).x;
                 }
             }
             const float standard_width = (s.x - marginSpaceStolen - total_static_width)/total_standard_widths;
             for(auto &child : getChildren()) {
-                auto *data = getBoxChildData(child);
                 float width;
                 float height;
-                if(data->x == RELATIVE) {
-                    width = data->size.x*standard_width;
+                if(getChildDirectionTypeX(child) == RELATIVE) {
+                    width = getChildSize(child).x*standard_width;
                 } else {
-                    width = data->size.x;
+                    width = getChildSize(child).x;
                 }
                 
-                if(data->y == RELATIVE) {
-                    height = data->size.y*s.y;
+                if(getChildDirectionTypeY(child) == RELATIVE) {
+                    height = getChildSize(child).y*s.y;
                     if(height > s.y) height = s.y;
                     if(height < 0) height = 0;
                 } else {
-                    height = data->size.y;
+                    height = getChildSize(child).y;
                 }
                 
                 child->setSize(sf::Vector2f(width, height));
                 child->setPosition(sf::Vector2f(x, y));
                 child->setOrigin(ORIGIN_START, ORIGIN_START);
-                x += width+mPadding;
+                x += width+padding;
             }
         }
         else {
@@ -104,79 +78,36 @@ namespace sui {
             
             // computer standard width and total static width allocated
             for(auto &child : getChildren()) {
-                auto *data = getBoxChildData(child);
-                if(data->y == RELATIVE) {
-                    total_standard_heights += data->size.y;
+                if(getChildDirectionTypeY(child) == RELATIVE) {
+                    total_standard_heights += getChildSize(child).y;
                 } else {
-                    total_static_height += data->size.y;
+                    total_static_height += getChildSize(child).y;
                 }
             }
             const float standard_height = (s.y - marginSpaceStolen - total_static_height)/total_standard_heights;
             for(auto &child : getChildren()) {
-                auto *data = getBoxChildData(child);
                 float width;
                 float height;
-                if(data->x == RELATIVE) {
-                    width = data->size.x*s.x;
+                if(getChildDirectionTypeX(child) == RELATIVE) {
+                    width = getChildSize(child).x*s.x;
                     if(width > s.x) width = s.x;
                     if(width < 0) width = 0;
                 } else {
-                    width = data->size.x;
+                    width = getChildSize(child).x;
                 }
                 
-                if(data->y == RELATIVE) {
-                    height = data->size.y*standard_height;
+                if(getChildDirectionTypeY(child) == RELATIVE) {
+                    height = getChildSize(child).y*standard_height;
                 } else {
-                    height = data->size.y;
+                    height = getChildSize(child).y;
                 }
                 
                 child->setSize(sf::Vector2f(width, height));
                 child->setPosition(sf::Vector2f(x, y));
                 child->setOrigin(ORIGIN_START, ORIGIN_START);
-                y += height+mPadding;
+                y += height+padding;
             }
         }
-
-        lockLocation(true);
-        lockSize(true);
-
-        Container::layoutChanged();
-    }
-
-    Widget *BoxLayout::addChild(Widget *widget) {
-        auto *child = Container::addChild(widget);
-        if(child) {
-            initiateChildData(getChildCustomData(child));
-        }
-        return child;
-    }
-    Widget *BoxLayout::insertChild(Widget *widget, unsigned int pos) {
-        auto *child = Container::insertChild(widget, pos);
-        if(child) {
-            initiateChildData(getChildCustomData(child));
-        }
-        return child;
-    }
-    Widget *BoxLayout::removeChild(Widget *widget) {
-        auto *child = Container::removeChild(widget);
-        if(child) {
-            BoxChildData *child_data = getBoxChildData(child);
-            if(child_data) {
-                delete child_data;
-            }
-        }
-        return child;
-    }
-    void BoxLayout::initiateChildData(void **data) {
-        *data = new BoxChildData;
-        BoxChildData *child_data = static_cast<BoxChildData *>(*data);
-        child_data->x = RELATIVE;
-        child_data->y = RELATIVE;
-        child_data->size = sf::Vector2f(1,1);
-    }
-    
-    BoxLayout::BoxChildData *BoxLayout::getBoxChildData(Widget *child) {
-        return static_cast<BoxChildData *>(*getChildCustomData(child));
     }
 }
 
