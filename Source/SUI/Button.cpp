@@ -10,6 +10,59 @@ namespace sui {
         mRectangleShape = sf::RectangleShape();
     }
     
+    void Button::onUpdate(const bool posChanged, const bool sizeChanged) {
+        bool shouldUpdateText = false;
+        
+        if(sizeChanged) {
+            mRectangleShape.setSize(getSize());
+        }
+        if(posChanged) {
+            mRectangleShape.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
+        }
+        
+        if(hasPropChanged("outlineColor")) {
+            mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
+        }
+        if(hasPropChanged("font")) {
+            mText.setFont(*getProperty("font").as<sf::Font *>());
+            shouldUpdateText = true;
+        }
+        if(hasPropChanged("text")) {
+            mText.setString(getProperty("text").as<sf::String>());
+            shouldUpdateText = true;
+        }
+        
+        bool shouldUpdateColor = false;
+        if(hasPropChanged("textColor")) {
+            mText.setColor(getProperty("textColor").as<sf::Color>());
+        }
+        if(hasPropChanged("fontSize")) {
+            mText.setCharacterSize(getProperty("fontSize").as<float>());
+            shouldUpdateText = true;
+        }
+        if(hasPropChanged("outlineThickness")) {
+            mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
+        }
+        if(hasPropChanged("fillColorClicked")) {
+            norm_color = getProperty("fillColorClicked").as<sf::Color>();
+            shouldUpdateColor = true;
+        }
+        if(hasPropChanged("fillColorHovered")) {
+            hover_color = getProperty("fillColorHovered").as<sf::Color>();
+            shouldUpdateColor = true;
+        }
+        if(hasPropChanged("fillColor")) {
+            click_color = getProperty("fillColor").as<sf::Color>();
+            shouldUpdateColor = true;
+        }
+        if(shouldUpdateColor) {
+            updateFillColors();
+        }
+        if(shouldUpdateText || sizeChanged || posChanged || hasPropChanged("textOriginX") || hasPropChanged("textOriginY")) {
+            updateText();
+        }
+    }
+    
     void Button::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mRectangleShape, states);
         target.draw(mText, states);
@@ -47,45 +100,6 @@ namespace sui {
             onClickedUp();
         }
         updateFillColors();
-    }
-    
-    void Button::onPositionChanged() {
-        mRectangleShape.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
-        updateText();
-    }
-    void Button::onSizeChanged() {
-        mRectangleShape.setSize(getSize());
-        updateText();
-    }
-    void Button::onPropertyChanged(const std::string key) {
-        if(key == "outlineColor") {
-            mRectangleShape.setOutlineColor(getProperty(key).as<sf::Color>());
-        } else if(key == "font") {
-            mText.setFont(*getProperty(key).as<sf::Font *>());
-            updateText();
-        } else if(key == "textColor") {
-            mText.setColor(getProperty(key).as<sf::Color>());
-        } else if(key == "fontSize") {
-            mText.setCharacterSize(getProperty(key).as<float>());
-        } else if(key == "outlineThickness") {
-            mRectangleShape.setOutlineThickness(-getProperty(key).as<float>());
-        } else if(key == "text") {
-            mText.setString(getProperty(key).as<sf::String>());
-            updateText();
-        } else if(key == "textOriginX") {
-            updateText();
-        } else if(key == "textOriginY") {
-            updateText();
-        } else if(key == "fillColorClicked") {
-            norm_color = getProperty(key).as<sf::Color>();
-            updateFillColors();
-        } else if(key == "fillColorHovered") {
-            hover_color = getProperty(key).as<sf::Color>();
-            updateFillColors();
-        } else if(key == "fillColor") {
-            click_color = getProperty(key).as<sf::Color>();
-            updateFillColors();
-        }
     }
     
     void Button::updateFillColors() {

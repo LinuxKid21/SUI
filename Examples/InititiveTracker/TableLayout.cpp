@@ -3,55 +3,83 @@
 #include <string>
 
 BoxLayout::BoxLayout() : sui::BoxLayout() {
-    ;
+    mFirstUpdate = true;
 }
 void BoxLayout::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
     sui::BoxLayout::onDraw(target, states);
-    for(auto &l : lines) {
+    for(auto &l : mLines) {
         target.draw(l, states);
     }
 }
 
 void BoxLayout::setLineColors(sf::Color color) {
     mColor = color;
-    for(auto &l : lines) {
+    for(auto &l : mLines) {
         l.setFillColor(color);
     }
 }
 
-void BoxLayout::onUpdate() {
-    sui::BoxLayout::onUpdate();
-    lines.clear();
+void BoxLayout::onUpdate(const bool posChanged, const bool sizeChanged) {
+    sui::BoxLayout::onUpdate(posChanged, sizeChanged);
+    const bool amount_changed = hasPropChanged("childAdded") || hasPropChanged("childRemoved") || hasPropChanged("padding") || mFirstUpdate;
+    if(amount_changed) {
+        mLines.clear();
+        mFirstUpdate = false;
+    }
+    
     // items flow horizontally so lines are vertical between them
     if(getDirection() == HORIZONTAL) {
         // place bar after every item except the last one
+        if(!getChildren().empty())
         for(unsigned int i = 0; i < getChildren().size()-1; i++) {
             auto &c = getChildren()[i];
-            const float place = c->getGlobalBounds().left + c->getSize().x;
-            const float width = getPadding();
-            lines.push_back(sf::RectangleShape(sf::Vector2f(width, getSize().y)));
-            lines.back().setPosition(sf::Vector2f(place, getGlobalBounds().top));
+            if(sizeChanged || amount_changed) {
+                const float width = getPadding();
+                if(amount_changed) {
+                    mLines.push_back(sf::RectangleShape(sf::Vector2f(width, getSize().y)));
+                } else {
+                    mLines[i].setSize(sf::Vector2f(width, getSize().y));
+                }
+            }
+            if(posChanged || amount_changed) {
+                const float place = c->getGlobalBounds().left + c->getSize().x;
+                mLines[i].setPosition(sf::Vector2f(place, getGlobalBounds().top));
+            }
             
         }
     } else {
         // place bar after every item except the last one
+        if(!getChildren().empty())
         for(unsigned int i = 0; i < getChildren().size()-1; i++) {
             auto &c = getChildren()[i];
-            const float place = c->getGlobalBounds().top + c->getSize().y;
-            const float height = getPadding();
-            lines.push_back(sf::RectangleShape(sf::Vector2f(getSize().x, height)));
-            lines.back().setPosition(sf::Vector2f(getGlobalBounds().left, place));
+            if(sizeChanged || amount_changed) {
+                const float height = getPadding();
+                if(amount_changed) {
+                    mLines.push_back(sf::RectangleShape(sf::Vector2f(getSize().x, height)));
+                } else {
+                    mLines[i].setSize(sf::Vector2f(getSize().x, height));
+                }
+            } 
+            if(posChanged || amount_changed) {
+                const float place = c->getGlobalBounds().top + c->getSize().y;
+                mLines[i].setPosition(sf::Vector2f(getGlobalBounds().left, place));
+            }
         }
     }
-    setLineColors(getProperty("outlineColor").as<sf::Color>());
+    
+    // not being called on table's vboxes
+    if(hasPropChanged("outlineColor") || amount_changed) {
+        setLineColors(getProperty("outlineColor").as<sf::Color>());
+    }
 }
 
 
 
 
 
-TableLayout::TableLayout(std::function<void(sui::Widget *)> addedText, std::function<void(sui::Widget *)> addedAddButton) : BoxLayout() {
-    setProperty("direction", sui::Property::make(sui::BoxLayout::HORIZONTAL));
+TableLayout::TableLayout(ThemeReader &reader) : BoxLayout(), mReader(reader) {
+    setProperty("direction", sui::BoxLayout::HORIZONTAL);
+    
     BoxLayout *vbox = new BoxLayout();
     vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
     vbox->setProperty("boxSize", sui::Property::make(sf::Vector2f(text_width,1)));
@@ -59,31 +87,31 @@ TableLayout::TableLayout(std::function<void(sui::Widget *)> addedText, std::func
     vbox->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
     addChild(vbox);
     
-    auto addText = [&vbox, &addedText](sf::String &&str) {
+    auto addText = [&vbox, this](sf::String &&str) {
         sui::FrameLayout *frame = new sui::FrameLayout();
         sui::Text *text = new sui::Text();
-        addedText(text);
-        text->setProperty("text", sui::Property::make<sf::String>(std::move(str)));
-        text->setProperty("frameSize", sui::Property::make(sf::Vector2f(1,.6)));
-        text->setProperty("framePos", sui::Property::make(sf::Vector2f(0,.5)));
-        text->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
-        text->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
-        text->setProperty("posTypeX", sui::Property::make(sui::BoxLayout::RELATIVE));
-        text->setProperty("posTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
+        mReader.setWidgetProps(text, "tableText");
+        text->setProperty("text", str);
+        text->setProperty("frameSize", sf::Vector2f(1,.6));
+        text->setProperty("framePos", sf::Vector2f(0,.5));
+        text->setProperty("scaleTypeX", sui::BoxLayout::RELATIVE);
+        text->setProperty("scaleTypeY", sui::BoxLayout::RELATIVE);
+        text->setProperty("posTypeX", sui::BoxLayout::RELATIVE);
+        text->setProperty("posTypeY", sui::BoxLayout::RELATIVE);
         
         frame->addChild(text);
         vbox->addChild(frame);
     };
     
     addText("Name");
-    addText("Inititive Roll");
-    addText("Inititive Mod");
+    addText("Initiative Roll");
+    addText("Initiative Mod");
     addText("Health");
     
     
     add_button = new sui::Button();
     addChild(add_button);
-    addedAddButton(add_button);
+    mReader.setWidgetProps(add_button, "addButton");
     add_button->setProperty("text", sui::Property::make<sf::String>("+"));
     add_button->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
     add_button->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
@@ -92,15 +120,17 @@ TableLayout::TableLayout(std::function<void(sui::Widget *)> addedText, std::func
     add_button->setProperty("scaleTypeX", sui::Property::make(sui::BoxLayout::ABSOLUTE));
     add_button->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
     add_button->setProperty("onClickedDown", sui::Property::makeFunc([this](){
-        addColumn();
-        onAdded();
+        // if we called addColumn directly then the button would be moved to the
+        // next onInput iteration and be called again which would call this
+        // again which would call it again... death loop!!!!!! *evil laugh*
+        shouldaddColumn = true;
     }));
 
     shouldAutoSort = false;
 }
 
 void TableLayout::onInput(sf::Event e) {
-	sui::BoxLayout::onInput(e);
+	BoxLayout::onInput(e);
 	if(shouldSort) {
 		sort();
 		shouldSort = false;
@@ -110,20 +140,45 @@ void TableLayout::onInput(sf::Event e) {
 void TableLayout::addColumn() {
     BoxLayout *vbox = new BoxLayout();
     insertChild(vbox, getChildren().size()-1);
-    vbox->setProperty("scaleTypeY", sui::Property::make(sui::BoxLayout::RELATIVE));
-    vbox->setProperty("boxScale", sui::Property::make(sf::Vector2f(column_width,1)));
-    vbox->setProperty("direction", sui::Property::make(sui::BoxLayout::VERTICAL));
+    vbox->setProperty("scaleTypeY", sui::BoxLayout::RELATIVE);
+    vbox->setProperty("boxSize", sf::Vector2f(column_width,1));
+    vbox->setProperty("direction", sui::BoxLayout::VERTICAL);
     
     for(unsigned int i = 0;i < 4; i++) {
         sui::TextField *textfield = new sui::TextField();
-        addedTextField(textfield);
-        textfield->setProperty("outlineThickness", sui::Property::make(0.f));
+        mReader.setWidgetProps(textfield, "tableTextField");
+        textfield->setProperty("outlineThickness", 0.f);
         textfield->setProperty("fillColor", textfield->getProperty("normalColor"));
         if(i == 1 || i == 2)
             textfield->setProperty("onChanged", sui::Property::makeFunc([this, textfield](){
                 autoSort(textfield);
             }));
-        vbox->addChild(textfield);
+        if(i == 0) {
+            textfield->setProperty("scaleTypeX", sui::BoxLayout::RELATIVE);
+            textfield->setProperty("scaleTypeY", sui::BoxLayout::RELATIVE);
+            textfield->setProperty("boxSize", sf::Vector2f(1,1));
+        
+            sui::BoxLayout *hbox = new sui::BoxLayout();
+            hbox->setProperty("direction", sui::BoxLayout::HORIZONTAL);
+            hbox->setProperty("padding", 0.f);
+            hbox->addChild(textfield);
+            auto *button = hbox->addChild(new sui::Button());
+            button->setProperty("fontSize", 12.f);
+            button->setProperty("text", sf::String("X"));
+            button->setProperty("scaleTypeX", sui::BoxLayout::ABSOLUTE);
+            button->setProperty("scaleTypeY", sui::BoxLayout::RELATIVE);
+            button->setProperty("boxSize", sf::Vector2f(30,1));
+            button->setProperty("onClickedDown", sui::Property::makeFunc([this, vbox](){
+                removeChild(vbox);
+                onChanged();
+                
+                delete_me.push_back(vbox);
+            }));
+            
+            vbox->addChild(hbox);
+        } else {
+            vbox->addChild(textfield);
+        }
     }
 }
 void TableLayout::autoSort(sui::TextField *textfield) {
@@ -132,14 +187,14 @@ void TableLayout::autoSort(sui::TextField *textfield) {
     for(unsigned int i = 0; i < str.getSize(); i++) {
         if(str[i] == L'+' || str[i] == L'-') {
             if(i == 0) {
-                break;
+                continue;
             } else {
                 textfield->setProperty("fillColor", textfield->getProperty("errorColor"));
                 break;
             }
         }
         if(str[i] != L'1' && str[i] != L'2' && str[i] != L'3' && str[i] != L'4' && str[i] != L'5' && str[i] != L'6' && str[i] != L'7' && str[i] != L'8' && str[i] != L'9' && str[i] != L'0') {
-            textfield->setProperty("fillColor", sui::Property::make(sf::Color(255,0,0,255)));
+            textfield->setProperty("fillColor", textfield->getProperty("errorColor"));
             break;
         }
     }
@@ -202,6 +257,12 @@ void TableLayout::sort() {
                 }
             }
         });
+    
+    // we just changed pointers which doesn't say anything to update. force update.
+    // this property doesn't actually do anything. "childAdded" is a special signal
+    // recieved in onUpdate via hasPropChanged whenever a child was added and usually
+    // requires a complete recomputation like what we want here.
+    setProperty("childAdded", true);
     update();
 }
 

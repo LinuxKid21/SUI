@@ -127,34 +127,38 @@ namespace sui {
             updateText();
         }
     }
-    
-    void TextField::onPropertyChanged(const std::string key) {
-        if(key == "outlineColor") {
-            mRectangleShape.setOutlineColor(getProperty(key).as<sf::Color>());
-        } else if(key == "outlineThickness") {
-            mRectangleShape.setOutlineThickness(-getProperty(key).as<float>());
-        } else if(key == "font") {
-            mText.setFont(*(getProperty(key).as<sf::Font *>()));
+    void TextField::onUpdate(const bool posChanged, const bool sizeChanged) {
+        const bool font_changed = hasPropChanged("font");
+        
+        if(hasPropChanged("outlineColor")) {
+            mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
+        } 
+        if(hasPropChanged("outlineThickness")) {
+            mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
+        } 
+        if(hasPropChanged("textColor")) {
+            mText.setColor(getProperty("textColor").as<sf::Color>());
+        } 
+        if(hasPropChanged("fillColor")) {
+            mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
+        }
+        
+        if(font_changed) {
+            mText.setFont(*(getProperty("font").as<sf::Font *>()));
+        }
+        
+        if(posChanged) {
+            mRectangleShape.setPosition(getGlobalTopLeftCorner());
+        }
+        if(sizeChanged) {
+            mRectangleShape.setSize(getSize());
+            mCursorShape.setSize(sf::Vector2f(1, getSize().y-8));
+            mCursorShape.setOrigin(sf::Vector2f(0,-4));
+        }
+        if(posChanged || sizeChanged || font_changed) {
             updateText();
             updateCursor();
-        } else if(key == "textColor") {
-            mText.setColor(getProperty(key).as<sf::Color>());
-        } else if(key == "fillColor") {
-            mRectangleShape.setFillColor(getProperty(key).as<sf::Color>());
         }
-    }
-    void TextField::onPositionChanged() {
-        mRectangleShape.setPosition(sf::Vector2f(getGlobalPosition().x, getGlobalPosition().y));
-        updateText();
-        updateCursor();
-    }
-    void TextField::onSizeChanged() {
-        mRectangleShape.setSize(getSize());
-        mCursorShape.setSize(sf::Vector2f(1, getSize().y-8));
-        mCursorShape.setOrigin(sf::Vector2f(0,-4));
-        
-        updateText();
-        updateCursor();
     }
     
     void TextField::resetCursorBlink() {

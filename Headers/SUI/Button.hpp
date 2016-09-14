@@ -29,9 +29,7 @@ namespace sui {
     private:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
         virtual void onInput(sf::Event e);
-        virtual void onPropertyChanged(const std::string key);
-        virtual void onPositionChanged();
-        virtual void onSizeChanged();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
         
         sf::RectangleShape mRectangleShape;
         sf::Text mText;

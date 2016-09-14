@@ -5,20 +5,24 @@
 #include <vector>
 
 namespace sui {
+    /* Container adds the special properties to mChangedKeys on certain situations:
+     * childAdded
+     * childRemoved
+    */
     class Container : public Widget {
     public:
         Container();
         virtual ~Container();
         
         // returns the added widget for convience or nullptr if that widget is already owned
-        virtual Widget *addChild(Widget *widget);
+        Widget *addChild(Widget *widget);
         
         // returns the added widget for convience or nullptr if that widget is already owned
         // throws exception if child is added out of range
-        virtual Widget *insertChild(Widget *widget, unsigned int pos);
+        Widget *insertChild(Widget *widget, unsigned int pos);
         
         // returns removed widget or nullptr if that widget is not a child
-        virtual Widget *removeChild(Widget *widget);
+        Widget *removeChild(Widget *widget);
         
         // if this returns false then children cannot manage their own location.
         bool childrenCanMove();
@@ -29,14 +33,8 @@ namespace sui {
     protected:
         virtual void onInput(sf::Event e);
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual void onUpdate() = 0;
-        virtual void onPropertyChanged(const std::string key);
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged) {};
         void updateChildProperties(Widget *w);
-
-        // unfortunately this has to be a pointer to pointer.
-        // usually you can just dereference it immediately but when you need
-        // to assign memory then you need the original pointer
-        void **getChildCustomData(Widget *child);
         
         std::vector<Widget *> mChildren;
     private:
@@ -46,7 +44,6 @@ namespace sui {
         void lockLocation(bool locked);
         void lockSize(bool locked);
         virtual void _onUpdate();
-        virtual void _onPositionChanged();
-        virtual void _onSizeChanged();
+        virtual void _setPropertyChanged(const std::string key);
     };
 }

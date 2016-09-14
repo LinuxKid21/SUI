@@ -61,7 +61,8 @@ int main() {
 
 
     sf::RenderWindow window(sf::VideoMode(window_width, window_height, 32), "SUI demo", sf::Style::Default);
-
+    window.setFramerateLimit(30);
+    
     while (window.isOpen()) {
         // handle events.
     	sf::Event event;
@@ -74,6 +75,11 @@ int main() {
     	}
         // clear the window so we are drawing on a clean slate
     	window.clear();
+        
+        // make sure any changed properties are updated before drawing.
+        // note this should be done even in this case were we don't
+        // change properties over time because button does(state as normal, clicked or hovered)
+        button->update();
         
         // draw the button
         window.draw(*button);

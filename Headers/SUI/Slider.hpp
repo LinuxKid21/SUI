@@ -16,11 +16,12 @@ namespace sui {
     protected:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
         virtual void onInput(sf::Event e);
-        virtual void onUpdate();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
     private:
         sf::Vector2f getSliderSize();
         sf::Vector2f getBarSize();
         void sliderChanged();
+        void placeSlider();
         
         void onClickedDown() {
             const Property &p = getProperty("onClickedDown");
@@ -33,16 +34,6 @@ namespace sui {
         void onValueChanged() {
             const Property &p = getProperty("onValueChanged");
             if(p) p.asFunc()();
-        }
-        float getMax() {
-            const Property &p = getProperty("max");
-            if(p) return p.as<float>();
-            return 1;
-        }
-        float getMin() {
-            const Property &p = getProperty("min");
-            if(p) return p.as<float>();
-            return 0;
         }
         BOX_DIRECTION getDirection() {
             const Property &p = getProperty("sliderDirection");

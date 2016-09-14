@@ -13,7 +13,7 @@ namespace sui {
     protected:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
         virtual void onInput(sf::Event e);
-        virtual void onUpdate();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
     private:
         sf::RectangleShape mCrossShape1; // two boxes to a cross
         sf::RectangleShape mCrossShape2; // two boxes to a cross
@@ -31,6 +31,14 @@ namespace sui {
             const Property &p = getProperty("onToggledOff");
             if(p) p.asFunc()();
         }
+        
+        float getOutlineThickness() {
+            const Property &p = getProperty("outlineThickness");
+            if(p) return p.as<float>();
+            return 2;
+        }
+        
+        void calculateCross();
         
         bool mState;
         

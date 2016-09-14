@@ -13,57 +13,45 @@ namespace sui {
     }
     
     void Container::onInput(sf::Event e) {
-        for(unsigned int i = 0; i < mChildren.size(); i++) {
+        for(int i = 0; i < mChildren.size(); i++) {
             mChildren[i]->onInput(e);
         }
     }
     
     void Container::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
-        for(auto &child : mChildren) {
-            child->onDraw(target, states);
+        for(int i = 0; i < mChildren.size(); i++) {
+            mChildren[i]->onDraw(target, states);
         }
     }
 
     void Container::_onUpdate() {
         lockLocation(false);
         lockSize(false);
-        onUpdate();
+        
+        mPosChanged = mPosChanged ||
+                mSizeChanged && (mOriginX != ORIGIN_START || mOriginY != ORIGIN_START);
+        if(mPosChanged) mInvalidGlobalPosition = true;
+        
         for(auto &child : mChildren) {
-            child->_onUpdate();
+            child->mPosChanged = child->mPosChanged || mPosChanged;
+            child->mSizeChanged = child->mSizeChanged || mSizeChanged;
+            if(child->mPosChanged) child->mInvalidGlobalPosition = true;
+        }
+        
+        onUpdate(mPosChanged, mSizeChanged);
+        mSizeChanged = false, mPosChanged = false;
+        mChangedKeys.clear();
+        
+        for(auto &child : mChildren) {
+            child->update();
         }
         lockLocation(true);
         lockSize(true);
     }
-    void Container::_onPositionChanged() {
-        lockLocation(false);
-        lockSize(false);
-        onPositionChanged();
-        for(auto &child : mChildren) {
-            child->_onPositionChanged();
-        }
-        lockLocation(true);
-        lockSize(true);
-    }
-    void Container::_onSizeChanged() {
-        lockLocation(false);
-        lockSize(false);
-        onSizeChanged();
-        for(auto &child : mChildren) {
-            child->_onSizeChanged();
-        }
-        lockLocation(true);
-        lockSize(true);
-    }
-    void Container::onPropertyChanged(const std::string key) {
-        for(unsigned int i = 0; i < mChildren.size(); i++) {
-            const Widget *c = mChildren[i];
-            // recursively alert children that the property changed
-            // if if they don't have that property defined locally
-            // (because that property overrides this one for it so
-            // it didn't really change for it)
-            if(c->mProperties.find(key) == c->mProperties.end()) {
-                mChildren[i]->onPropertyChanged(key);
-            }
+    void Container::_setPropertyChanged(const std::string key) {
+        Widget::_setPropertyChanged(key);
+        for(auto &c : mChildren) {
+            c->_setPropertyChanged(key);
         }
     }
     
@@ -73,6 +61,7 @@ namespace sui {
         }
         mChildren.push_back(widget);
         widget->mParent = this;
+        mChangedKeys.insert("childAdded");
         updateChildProperties(widget);
         return widget;
     }
@@ -82,31 +71,36 @@ namespace sui {
             return nullptr;
         }
         if(pos > mChildren.size()) {
-            throw "Error, index passed in is invalid!";
+            throw std::string("Error, index passed in is invalid!");
         }
         mChildren.insert(mChildren.begin() + pos, widget);
         widget->mParent = this;
+        mChangedKeys.insert("childAdded");
         updateChildProperties(widget);
         return widget;
     }
+    
+    // collect properties from this and all parents of the new widget and apply them to this child widget
     void Container::updateChildProperties(Widget *w) {
-        std::unordered_set<std::string> names;
         Widget *iter = this;
         while(iter != nullptr) {
             for(std::map<std::string,Property>::iterator it=iter->mProperties.begin(); it!=iter->mProperties.end(); ++it) {
-                if(names.find(it->first) == names.end()) {
-                    onPropertyChanged(it->first);
-                    names.insert(it->first);
-                }
+                w->mChangedKeys.insert(it->first);
             }
             iter = iter->getParent();
         }
+        Container *container_child = dynamic_cast<Container *>(w);
+        if(container_child)
+            for(auto &c : container_child->mChildren) {
+                updateChildProperties(c);
+            }
     }
     
     Widget *Container::removeChild(Widget *widget) {
         for(int i = 0;i < mChildren.size(); i++) {
             if(mChildren[i] == widget) {
                 mChildren.erase(mChildren.begin()+i);
+                mChangedKeys.insert("childRemoved");
                 widget->mParent = nullptr;
                 return widget;
             }
@@ -136,9 +130,5 @@ namespace sui {
     
     const std::vector<Widget *> &Container::getChildren() {
         return mChildren;
-    }
-
-    void **Container::getChildCustomData(Widget *child) {
-        return &child->mContainerData;
     }
 }

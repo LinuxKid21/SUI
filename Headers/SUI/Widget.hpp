@@ -2,6 +2,7 @@
 #include "Theme.hpp"
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <unordered_set>
 
 namespace sui {
     class Container;
@@ -42,27 +43,46 @@ namespace sui {
         bool setOrigin(ORIGIN originX, ORIGIN originY);
         
         const Property &getProperty(const std::string key) const;
-        void setProperty(const std::string key, const Property &prop);
+        
+        void setProperty(const std::string key, const Property &prop) {
+            mProperties[key] = prop;
+            _setPropertyChanged(key);
+        }
+        
+        // from next line to line thereafter with this nice change
+        // setProperty("key", sui::Property::make<type>(value))
+        // setProperty<type>("key", value)
+        template <class T>
+        void setProperty(const std::string key, T prop) {
+            setProperty(key, Property::make<T>(std::move(prop)));
+        }
+        
         bool removeProperty(const std::string key);
         void clearAllProperties();
+        
+        // to be used ONLY inside onUpdate to detect changed properties
+        bool hasPropChanged(const std::string key) {
+            return mChangedKeys.find(key) != mChangedKeys.end();
+        }
         
     protected:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
         virtual void onInput(sf::Event e) = 0;
-        virtual void onUpdate() {};
-        virtual void onPropertyChanged(const std::string key) {}
-        virtual void onPositionChanged() {}
-        virtual void onSizeChanged() {}
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged) {}
+        
         
         ORIGIN mOriginX;
         ORIGIN mOriginY;
         
     private:
+        bool mPosChanged;
+        bool mSizeChanged;
         Property nullProperty;
         // necessary extra layer of complexity so container has some extra control nothing else needs
         virtual void _onUpdate();
-        virtual void _onPositionChanged();
-        virtual void _onSizeChanged();
+        virtual void _setPropertyChanged(const std::string key) {
+            mChangedKeys.insert(key);
+        }
         
         // helper for getLocalBounds and getGlobalBounds functions
         sf::FloatRect _getBoundsGeneric(const float x, const float y, const float w, const float h) const;
@@ -80,13 +100,8 @@ namespace sui {
         // global position calculation
         void updateGlobalPosition() const;
         
-        // containers almost always need some specific data it stores with its
-        // widgets of all types so here's a void pointer!
-        // BoxLayout for example allows children to define their size(in either or both directions)
-        // or to figure out sizes automatically.
-        void *mContainerData;
-        
         bool mVisible;
         std::map <std::string, Property> mProperties;
+        std::unordered_set<std::string> mChangedKeys;
     };
 }

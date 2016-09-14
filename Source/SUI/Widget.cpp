@@ -15,7 +15,8 @@ namespace sui {
         
         mVisible = true;
         
-        mContainerData = nullptr;
+        mPosChanged = false;
+        mSizeChanged = false;
     }
     Widget::~Widget() {
         ;
@@ -36,7 +37,13 @@ namespace sui {
     }
     // overriden in Container
     void Widget::_onUpdate() {
-        onUpdate();
+        // an origin in the center or right means that to resize is to move
+        mPosChanged = mPosChanged ||
+                mSizeChanged && (mOriginX != ORIGIN_START || mOriginY != ORIGIN_START);
+        if(mPosChanged) mInvalidGlobalPosition = true;
+        onUpdate(mPosChanged, mSizeChanged);
+        mSizeChanged = false, mPosChanged = false;
+        mChangedKeys.clear();
     }
     
     bool Widget::setPosition(sf::Vector2f pos) {
@@ -45,12 +52,8 @@ namespace sui {
         }
         mLocalPosition = pos;
         mInvalidGlobalPosition = true;
-        
-        _onPositionChanged();
+        mPosChanged = true;
         return true;
-    }
-    void Widget::_onPositionChanged() {
-        onPositionChanged();
     }
     sf::Vector2f Widget::getLocalPosition() const {
         return mLocalPosition;
@@ -65,12 +68,9 @@ namespace sui {
             return false;
         }
         mLocalSize = size;
+        mSizeChanged = true;
         
-        _onSizeChanged();
         return true;
-    }
-    void Widget::_onSizeChanged() {
-        onSizeChanged();
     }
     sf::Vector2f Widget::getSize() const {
         return mLocalSize;
@@ -99,8 +99,8 @@ namespace sui {
         mOriginY = originY;
         
         mInvalidGlobalPosition = true;
+        mPosChanged = true;
         
-        _onPositionChanged();
         return true;
     }
     
@@ -119,10 +119,6 @@ namespace sui {
             iter = iter->mParent;
         }
         return nullProperty;
-    }
-    void Widget::setProperty(const std::string key, const Property &prop) {
-        mProperties[key] = prop;
-        onPropertyChanged(key);
     }
     bool Widget::removeProperty(const std::string key) {
         return mProperties.erase(key) == 1;

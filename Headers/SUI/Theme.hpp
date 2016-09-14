@@ -72,10 +72,16 @@ namespace sui {
             impl = nullptr;
         }
         Property(const Property &other) {
-            this->impl = other.impl->copy();
+            if(other.impl)
+                this->impl = other.impl->copy();
+            else
+                this->impl = nullptr;
         }
         void operator=(const Property &other) {
-            this->impl = other.impl->copy();
+            if(other.impl)
+                this->impl = other.impl->copy();
+            else
+                this->impl = nullptr;
         }
         
         Property(Property &&other) {

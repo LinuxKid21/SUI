@@ -5,7 +5,6 @@
 namespace sui {
     Text::Text() : Widget() {
         mText = sf::Text();
-        mText.setString("test");
     }
     void Text::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mText, states);
@@ -13,28 +12,41 @@ namespace sui {
     void Text::onInput(sf::Event e) {
         return; // no input handling here
     }
-    
-    void Text::onUpdate() {
-        mText.setFont(*getProperty("font").as<sf::Font *>());
-        mText.setPosition(sf::Vector2f(getGlobalBounds().left, getGlobalBounds().top));
-        mText.setColor(getProperty("textColor").as<sf::Color>());
-        insureTextFits();
+    void Text::onUpdate(const bool posChanged, const bool sizeChanged) {
+        const bool font_changed = hasPropChanged("font");
+        const bool text_changed = hasPropChanged("text");
+        const bool color_changed = hasPropChanged("textColor");
+        if(font_changed) {
+            mText.setFont(*getProperty("font").as<sf::Font *>());
+        }
+        if(color_changed) {
+            mText.setColor(getProperty("textColor").as<sf::Color>());
+        }
+        if(posChanged) {
+            mText.setPosition(getGlobalTopLeftCorner());
+        }
+        if(sizeChanged || font_changed || text_changed) {
+            mText.setString(getText());
+            insureTextFitsVertically();
+            insureTextFitsHorizontally();
+        }
     }
     
-    void Text::insureTextFits() {
-        sf::String str = getProperty("text").as<sf::String>();
+    void Text::insureTextFitsVertically() {
+        if(!getProperty("font")) return;
         
-        // assume it fits until it doesn't :)
-        mText.setString(str);
+        unsigned int font_size = fitTextVertically(*mText.getFont(), getSize().y, 'J');
+        mText.setCharacterSize(font_size);
+        setTextOrigin(mText, ORIGIN_START, ORIGIN_START, 'J');
+    }
+    void Text::insureTextFitsHorizontally() {
+        if(!getProperty("font")) return;
+        sf::String str = getText();
         
         if(getSize().x == 0) {
             return;
         }
-        unsigned int font_size = fitTextVertically(*mText.getFont(), getSize().y, 'J');
-        mText.setCharacterSize(font_size);
-        setTextOrigin(mText, ORIGIN_START, ORIGIN_START, 'J');
-
-        
+        const unsigned int font_size = mText.getCharacterSize();
         // calculate how much text fits.
         float total_space = 0;
         for(unsigned int i = 0;i < str.getSize(); i++) {

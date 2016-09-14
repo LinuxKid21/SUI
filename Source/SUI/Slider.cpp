@@ -4,6 +4,11 @@ namespace sui {
     Slider::Slider() : Widget() {
         mClicked = false;
         mSliderPosition = .5;
+        mRectangleShape.setOutlineThickness(-2);
+        mBarShape.setOutlineThickness(-2);
+        setProperty<float>("value", mSliderPosition);
+        setProperty<float>("min", 0);
+        setProperty<float>("max", 1);
     }
     void Slider::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mBarShape);
@@ -37,46 +42,55 @@ namespace sui {
             }
         }
     }
-    
-    
-    // void Slider::setRange(float min, float max) {
-    //     if(max == min) {
-    //         // should we throw an error?
-    //         // should we just handle it even if it makes no sense?
-    //         return;
-    //     }
-    //     mMax = max;
-    //     mMin = min;
-    //     // assure that min is actually the lesser one
-    //     if(mMax > mMin) return;
-    //     mMax = min;
-    //     mMin = max;
-    // }
-    // void Slider::setValue(float value) {
-    //     mSliderPosition = (value-mMin)/(mMax-mMin);
-    //     if(mSliderPosition > 1) mSliderPosition = 1;
-    //     if(mSliderPosition < 0) mSliderPosition = 0;
-    // }
-    
-    void Slider::onUpdate() {
-        mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
-        mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
-        mRectangleShape.setOutlineThickness(-2);
-        
-        mBarShape.setFillColor(getProperty("fillColor").as<sf::Color>());
-        mBarShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
-        mBarShape.setOutlineThickness(-2);
-        
-        
-        
-        mRectangleShape.setSize(sf::Vector2f(getSliderSize()));
-        mBarShape.setSize(getBarSize());
-        if(getDirection() == HORIZONTAL) {
-            mBarShape.setPosition(getGlobalBounds().left,getGlobalBounds().top-getBarSize().y/2+getSize().y/2);
-        } else {
-            mBarShape.setPosition(getGlobalBounds().left-getBarSize().x/2+getSize().x/2,getGlobalBounds().top);
+    void Slider::onUpdate(const bool posChanged, const bool sizeChanged) {
+        if(hasPropChanged("fillColor")) {
+            sf::Color c = getProperty("fillColor").as<sf::Color>();
+            mRectangleShape.setFillColor(c);
+            mBarShape.setFillColor(c);
         }
-        sliderChanged();
+        if(hasPropChanged("outlineColor")) {
+            sf::Color c = getProperty("outlineColor").as<sf::Color>();
+            mRectangleShape.setOutlineColor(c);
+            mBarShape.setOutlineColor(c);
+        }
+        
+        if(hasPropChanged("min") || hasPropChanged("max")) {
+            // sanitize data to something that makes even some sense
+            float &min = *getProperty("min").asPointer<float>();
+            float &max = *getProperty("max").asPointer<float>();
+            if(max < min) {
+                const float temp = max;
+                max = min;
+                min = temp;
+            }
+        }
+        
+        if(hasPropChanged("value")) {
+            const float max = getProperty("max").as<float>();
+            const float min = getProperty("min").as<float>();
+            
+            float &v = *getProperty("value").asPointer<float>();
+            if(v > max) v = max;
+            if(v < min) v = min;
+            sliderChanged();
+        }
+        
+        const bool slider_direction_changed = hasPropChanged("sliderDirection");
+        
+        if(posChanged || slider_direction_changed) {
+            if(getDirection() == HORIZONTAL) {
+                mBarShape.setPosition(getGlobalBounds().left,getGlobalBounds().top-getBarSize().y/2+getSize().y/2);
+            } else {
+                mBarShape.setPosition(getGlobalBounds().left-getBarSize().x/2+getSize().x/2,getGlobalBounds().top);
+            }
+            placeSlider();
+        }
+        if(sizeChanged || slider_direction_changed) {
+            mRectangleShape.setSize(sf::Vector2f(getSliderSize()));
+            mBarShape.setSize(getBarSize());
+            
+            placeSlider();
+        }
     }
     
     sf::Vector2f Slider::getSliderSize() {
@@ -95,18 +109,21 @@ namespace sui {
             return sf::Vector2f(getSize().x/5,getSize().y);
         }
     }
-    
+    void Slider::placeSlider() {
+        if(getDirection() == HORIZONTAL) {
+            mRectangleShape.setPosition(getGlobalBounds().left+mSliderPosition*(getSize().x-Slider::getSliderSize().x),getGlobalBounds().top);
+        } else {
+            mRectangleShape.setPosition(getGlobalBounds().left,getGlobalBounds().top+mSliderPosition*(getSize().y-Slider::getSliderSize().y));
+        }
+    }
     void Slider::sliderChanged() {
         static float lastSliderPosition = -1; // something garunteed to be different than mSliderPosition so it runs the first time
         if(lastSliderPosition != mSliderPosition) {
-            float max = getMax();
-            float min = getMin();
-            setProperty("value", sui::Property::make<float>(mSliderPosition*(max-min)+min));
-            if(getDirection() == HORIZONTAL) {
-                mRectangleShape.setPosition(getGlobalBounds().left+mSliderPosition*(getSize().x-Slider::getSliderSize().x),getGlobalBounds().top);
-            } else {
-                mRectangleShape.setPosition(getGlobalBounds().left,getGlobalBounds().top+mSliderPosition*(getSize().y-Slider::getSliderSize().y));
-            }
+            const float max = getProperty("max").as<float>();
+            const float min = getProperty("min").as<float>();
+            float &v = *getProperty("value").asPointer<float>();
+            v = mSliderPosition*(max-min)+min;
+            placeSlider();
             lastSliderPosition = mSliderPosition;
             onValueChanged();
         }

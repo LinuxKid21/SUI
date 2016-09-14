@@ -21,6 +21,7 @@ int main() {
     hbox->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
     hbox->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
     hbox->setProperty("padding", sui::Property::make(5.f));
+    // hbox->setProperty("direction", sui::BoxLayout::VERTICAL);
     
     // All children will fit inside a 500x100 box garunteed
     hbox->setSize(sf::Vector2f(500,100));
@@ -48,8 +49,6 @@ int main() {
         // add button that will help spell "hbox!" to the hbox
         hbox->addChild(b);
         
-        // whenver a child is added the layout must be recalculated
-        hbox->update();
         if(*iter != '!') {
             iter++;
         }
@@ -59,7 +58,6 @@ int main() {
     hbox->addChild(button);
 
     
-    hbox->update();
 
 
     sf::RenderWindow window(sf::VideoMode(window_width, window_height, 32), "SUI demo", sf::Style::Default);
@@ -76,6 +74,7 @@ int main() {
     	window.clear();
         
         // this will automatically call this for all of it's children
+        hbox->update();
         window.draw(*hbox);
     	window.display();
     }

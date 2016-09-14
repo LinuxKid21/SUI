@@ -27,21 +27,30 @@ int main() {
     grid->setPosition(sf::Vector2f(window_width/2, window_height/2));
     grid->setSize(sf::Vector2f(400,200));
     
-    for(unsigned int x = 0;x < xCells; x++) {
+    for(unsigned int x = 0;x < xCells/2; x++) {
         for(unsigned int y = 0;y < yCells; y++) {
             sui::Button *button = new sui::Button();
             button->setProperty("text", sui::Property::make<sf::String>(std::to_string(x) + ", " + std::to_string(y)));
-            button->setProperty("gridPosX", sui::Property::make(x));
-            button->setProperty("gridPosY", sui::Property::make(y));
-            button->setProperty("onClickedDown", sui::Property::makeFunc([x, y](){
+            button->setProperty<int>("gridPosX", x*2);
+            button->setProperty<int>("gridPosY", y);
+            button->setProperty("fillColor", sf::Color(255,255,255,255));
+            button->setProperty("fillColorHovered", sf::Color(200,200,200,255));
+            button->setProperty("fillColorClicked", sf::Color(100,100,100,255));
+            button->setProperty("onClickedDown", sui::Property::makeFunc([x, y, button](){
+                int x_pos = button->getProperty("gridPosX").as<int>();
+                if(x_pos % 2 == 1) {
+                    button->setProperty<int>("gridPosX", x_pos-1);
+                } else {
+                    button->setProperty<int>("gridPosX", x_pos+1);
+                }
                 std::cout << "(" << x << ", " << y << ")\n";
             }));
             grid->addChild(button);
         }
     }
-    grid->update();
 
     sf::RenderWindow window(sf::VideoMode(window_width, window_height, 32), "SUI demo", sf::Style::Default);
+    window.setFramerateLimit(30);
 
     while (window.isOpen()) {
     	sf::Event event;
@@ -51,6 +60,7 @@ int main() {
             grid->handleInput(event);
     	}
     	window.clear();
+        grid->update();
         window.draw(*grid);
     	window.display();
     }

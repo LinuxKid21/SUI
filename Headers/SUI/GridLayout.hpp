@@ -6,12 +6,11 @@
 namespace sui {
     /* children must have gridPosX and gridPosY int properties set */
     class GridLayout : public Container {
-    protected:
-        struct GridChildData;
     public:
         GridLayout();
     protected:
-        virtual void onUpdate();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
+    private:
         float getPadding() {
             if(getProperty("padding")) return getProperty("padding").as<float>();
             return 0;
@@ -24,5 +23,7 @@ namespace sui {
             if(getProperty("yCells")) return getProperty("yCells").as<int>();
             return 0;
         }
+        sf::Vector2f cell_size;
+        sf::Vector2f origin_offset;
     };
 }

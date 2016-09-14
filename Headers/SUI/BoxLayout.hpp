@@ -25,7 +25,9 @@ namespace sui {
         BoxLayout();
         
     protected:
-        virtual void onUpdate();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
+        
+        void _updateGeneric();
         
         float getPadding() {
             const Property &p = getProperty("padding");
@@ -47,10 +49,25 @@ namespace sui {
             if(p) return p.as<SCALE_TYPE>();
             return RELATIVE;
         }
+        SCALE_TYPE getChildDirectionTypeRunning(Widget *w) {
+            if(getDirection() == HORIZONTAL) {
+                return getChildDirectionTypeX(w);
+            } else {
+                return getChildDirectionTypeY(w);
+            }
+        }
+        SCALE_TYPE getChildDirectionTypeOpposite(Widget *w) {
+            if(getDirection() == HORIZONTAL) {
+                return getChildDirectionTypeY(w);
+            } else {
+                return getChildDirectionTypeX(w);
+            }
+        }
         sf::Vector2f getChildSize(Widget *w) {
             const Property &p = w->getProperty("boxSize");
             if(p) return p.as<sf::Vector2f>();
             return sf::Vector2f(1,1);
         }
+        sf::Vector2f origin_offset;
     };
 }

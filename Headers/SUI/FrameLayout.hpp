@@ -5,8 +5,6 @@
 
 namespace sui {
     class FrameLayout : public Container {
-    protected:
-        struct FrameChildData;
     public:
         enum DIRECTION_TYPE {
             RELATIVE = 0, // relative size(e.g. twice as large as others)
@@ -15,7 +13,7 @@ namespace sui {
         FrameLayout();
         
     protected:
-        virtual void onUpdate();
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
         DIRECTION_TYPE getScaleTypeX(Widget *c) {
             const Property &p = c->getProperty("scaleTypeX");
             if(p) return p.as<DIRECTION_TYPE>();

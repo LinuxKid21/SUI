@@ -7,7 +7,6 @@ namespace sui {
         auto shrink = [&](){
             float letter_height = font.getGlyph(base, fonts_size, false).bounds.height;
             return letter_height > height;
-            std::cout << "called\n";
         };
         
         auto grow = [&](){

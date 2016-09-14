@@ -54,8 +54,8 @@ int main() {
     text_field->setProperty("text", sui::Property::make<sf::String>("type in me!"));
     text_field->setProperty("boxSize", sui::Property::make(sf::Vector2f(1, 30)));
     text_field->setProperty("scaleTypeY", BoxAbs);
-
-
+    
+    
     auto *slider = vbox->addChild(new sui::Slider());
     
     // horizontal is default but vbox also has a property "direction" that this will erroneously try to read from
@@ -80,8 +80,8 @@ int main() {
     check_box->setProperty("onToggledOff", sui::Property::makeFunc([](){
         std::cout << "TOGGLED OFF\n";
     }));
-
-
+    
+    
     sf::Texture sfml_texture;
     sfml_texture.loadFromFile("sfml_icon.png");
     auto *image = vbox->addChild(new sui::Image());
@@ -90,7 +90,6 @@ int main() {
     image->setProperty("boxSize", sui::Property::make(sf::Vector2f(vbox->getSize().x, vbox->getSize().x)));
     image->setProperty("texture", sui::Property::make(&sfml_texture));
     
-    vbox->update();
 
 
 
@@ -107,6 +106,7 @@ int main() {
     	}
 
     	window.clear();
+        vbox->update();
         window.draw(*vbox);
     	window.display();
     }
