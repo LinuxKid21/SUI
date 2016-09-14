@@ -225,10 +225,10 @@ namespace sui {
     void TextField::updateText() {
         mText.setString(getText());
 
-        setTextOrigin(mText, ORIGIN_START, ORIGIN_MIDDLE, 't');
         auto r = getGlobalBounds();
         mText.setPosition(sf::Vector2f(r.left+5, r.top+r.height/2));
         mText.setCharacterSize(r.height*.7); //.7 is jut a magic number to make letters like 'g' fit in
+        setTextOrigin(mText, ORIGIN_START, ORIGIN_MIDDLE, 't');
     }
     
     void TextField::updateCursor() {
