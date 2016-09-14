@@ -198,6 +198,9 @@ void TableLayout::autoSort(sui::TextField *textfield) {
             break;
         }
     }
+    if(str.getSize() > 9) {
+        textfield->setProperty("fillColor", textfield->getProperty("errorColor"));
+    }
     if(shouldAutoSort) {
 		// we don't want to call sort immediately
 		// because it may move this over to the right
@@ -219,10 +222,14 @@ void TableLayout::sort() {
                 mod_i = std::stoi(mod_string_i);
             } catch(std::invalid_argument arg) {
                 mod_i = 0;
+            } catch(std::out_of_range rng) {
+                return false;
             }
             try {
                 roll_i = std::stoi(roll_string_i)+mod_i;
             } catch(std::invalid_argument arg) {
+                return false;
+            } catch(std::out_of_range rng) {
                 return false;
             }
             
@@ -236,10 +243,14 @@ void TableLayout::sort() {
                 mod_j = std::stoi(mod_string_j);
             } catch(std::invalid_argument arg) {
                 mod_j = 0;
+            } catch(std::out_of_range rng) {
+                return false;
             }
             try {
                 roll_j = std::stoi(roll_string_j)+mod_j;
             } catch(std::invalid_argument arg) {
+                return false;
+            } catch(std::out_of_range rng) {
                 return false;
             }
             
