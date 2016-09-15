@@ -33,7 +33,7 @@ namespace sui {
     protected:
         virtual void onInput(sf::Event e);
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual void onUpdate(const bool posChanged, const bool sizeChanged) {};
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
         void updateChildProperties(Widget *w);
         
         std::vector<Widget *> mChildren;

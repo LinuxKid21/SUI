@@ -2,7 +2,6 @@
 
 namespace sui {
     Slider::Slider() : Widget() {
-        mClicked = false;
         mSliderPosition = .5;
         mRectangleShape.setOutlineThickness(-2);
         mBarShape.setOutlineThickness(-2);
@@ -15,34 +14,24 @@ namespace sui {
         target.draw(mRectangleShape);
     }
     void Slider::onInput(sf::Event e) {
-        if(e.type == sf::Event::MouseMoved) {
-            if(mClicked) {
-                const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
-                if(getDirection() == HORIZONTAL) {
-                    const float x = getGlobalBounds().left;
-                    mSliderPosition = (mousePos.x-x)/getSize().x;
-                } else {
-                    const float y = getGlobalBounds().top;
-                    mSliderPosition = (mousePos.y-y)/getSize().y;
-                }
-                if(mSliderPosition > 1) mSliderPosition = 1;
-                if(mSliderPosition < 0) mSliderPosition = 0;
-                sliderChanged();
+        Widget::onInput(e);
+        const bool clicking = getProperty("clicking").as<bool>();
+        if(clicking && e.type == sf::Event::MouseMoved) {
+            const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
+            if(getDirection() == HORIZONTAL) {
+                const float x = getGlobalBounds().left;
+                mSliderPosition = (mousePos.x-x)/getSize().x;
+            } else {
+                const float y = getGlobalBounds().top;
+                mSliderPosition = (mousePos.y-y)/getSize().y;
             }
-        } else if(e.type == sf::Event::MouseButtonPressed) {
-            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
-            if(getGlobalBounds().contains(mousePos)) {
-                mClicked = true;
-                onClickedDown();
-            }
-        } else if(e.type == sf::Event::MouseButtonReleased) {
-            if(mClicked) {
-                mClicked = false;
-                onClickedUp();
-            }
+            if(mSliderPosition > 1) mSliderPosition = 1;
+            if(mSliderPosition < 0) mSliderPosition = 0;
+            sliderChanged();
         }
     }
     void Slider::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         if(hasPropChanged("fillColor")) {
             sf::Color c = getProperty("fillColor").as<sf::Color>();
             mRectangleShape.setFillColor(c);

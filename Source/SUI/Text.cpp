@@ -9,10 +9,8 @@ namespace sui {
     void Text::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mText, states);
     }
-    void Text::onInput(sf::Event e) {
-        return; // no input handling here
-    }
     void Text::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         const bool font_changed = hasPropChanged("font");
         const bool text_changed = hasPropChanged("text");
         const bool color_changed = hasPropChanged("textColor");

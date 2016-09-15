@@ -6,6 +6,7 @@ namespace sui {
         ;
     }
     void GridLayout::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Container::onUpdate(posChanged, sizeChanged);
         bool recalculate = hasPropChanged("padding") || hasPropChanged("xCells") || hasPropChanged("yCells");
         if(posChanged) {
             switch(mOriginX) {

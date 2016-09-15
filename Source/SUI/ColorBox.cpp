@@ -9,10 +9,8 @@ namespace sui {
     void ColorBox::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
         target.draw(mRectangleShape, states);
     }
-    void ColorBox::onInput(sf::Event e) {
-        return;
-    }
     void ColorBox::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         if(hasPropChanged("fillColor")) {
             mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
         }

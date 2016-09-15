@@ -28,30 +28,11 @@ namespace sui {
         Button();
     private:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const;
-        virtual void onInput(sf::Event e);
         virtual void onUpdate(const bool posChanged, const bool sizeChanged);
         
         sf::RectangleShape mRectangleShape;
         sf::Text mText;
         
-        bool mHovered;
-        bool mClicked;
-        void onEntered() {
-            const Property &p = getProperty("onEntered");
-            if(p) p.asFunc()();
-        }
-        void onExited() {
-            const Property &p = getProperty("onExited");
-            if(p) p.asFunc()();
-        }
-        void onClickedDown() {
-            const Property &p = getProperty("onClickedDown");
-            if(p) p.asFunc()();
-        }
-        void onClickedUp() {
-            const Property &p = getProperty("onClickedUp");
-            if(p) p.asFunc()();
-        }
         ORIGIN getTextOriginX() {
             if(getProperty("textAlignX")) return getProperty("textAlignX").as<ORIGIN>();
             return ORIGIN_MIDDLE;

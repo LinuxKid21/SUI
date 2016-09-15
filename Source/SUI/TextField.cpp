@@ -8,9 +8,7 @@ namespace sui {
         mCursorPositionStart = 0;
         mCursorPositionEnd = 0;
         mCursorTimer = sf::Clock();
-        mHovered = false;
         mActive = false;
-        mSelecting = false;
         setProperty("text", sui::Property::make<sf::String>(""));
     }
     void TextField::onDraw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -27,26 +25,16 @@ namespace sui {
         }
     }
     void TextField::onInput(sf::Event e) {
+        Widget::onInput(e);
         if(e.type == sf::Event::MouseMoved) {
             const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
             
-            if(mSelecting) {
+            if(getProperty("clicking").as<bool>()) {
                 float x_diff = mousePos.x-(getGlobalPosition().x+getTextPadding());
                 mCursorPositionEnd = findNearestCursorPoint(x_diff);
                 updateCursor();
             }
             
-            if(getGlobalBounds().contains(mousePos)) {
-                // call only while entering, not constantly while inside
-                if(!mHovered) {
-                    onEntered();
-                }
-
-                mHovered = true;
-            } else if(mHovered) {
-                    onExited();
-                mHovered = false;
-            }
             
         } else if(e.type == sf::Event::MouseButtonPressed) {
             if(e.mouseButton.button == sf::Mouse::Button::Left) {
@@ -65,17 +53,13 @@ namespace sui {
                     updateCursor();
                     
                     onActivated();
-                    mSelecting = true;
                 }
                 
                 if(!mActive) {
                     onDeactivated();
                 }
             }
-        } else if(e.type == sf::Event::MouseButtonReleased) {
-            if(e.mouseButton.button == sf::Mouse::Button::Left)
-                mSelecting = false;
-        } else if(e.type == sf::Event::KeyPressed && mActive) {
+        }  else if(e.type == sf::Event::KeyPressed && mActive) {
             if(e.key.code == sf::Keyboard::Key::Left) {
                 moveCursorLeft(e.key.shift);
             } else if(e.key.code == sf::Keyboard::Key::Right) {
@@ -128,6 +112,7 @@ namespace sui {
         }
     }
     void TextField::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         const bool font_changed = hasPropChanged("font");
         
         if(hasPropChanged("outlineColor")) {

@@ -34,15 +34,6 @@ namespace sui {
         void moveCursorLeft(bool shift);
         void moveCursorRight(bool shift);
         
-        
-        void onEntered() {
-            const Property &p = getProperty("onEntered");
-            if(p) p.asFunc()();
-        }
-        void onExited() {
-            const Property &p = getProperty("onExited");
-            if(p) p.asFunc()();
-        }
         void onActivated() {
             const Property &p = getProperty("onActivated");
             if(p) p.asFunc()();
@@ -71,7 +62,6 @@ namespace sui {
         int findNearestCursorPoint(float x_diff);
         
         bool mActive;
-        bool mHovered;
         bool mSelecting;
         void updateText();
         void updateCursor();

@@ -13,6 +13,7 @@ namespace sui {
     }
     
     void Container::onInput(sf::Event e) {
+        Widget::onInput(e);
         for(int i = 0; i < mChildren.size(); i++) {
             mChildren[i]->onInput(e);
         }
@@ -22,6 +23,9 @@ namespace sui {
         for(int i = 0; i < mChildren.size(); i++) {
             mChildren[i]->onDraw(target, states);
         }
+    }
+    void Container::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
     }
 
     void Container::_onUpdate() {
@@ -37,7 +41,6 @@ namespace sui {
             child->mSizeChanged = child->mSizeChanged || mSizeChanged;
             if(child->mPosChanged) child->mInvalidGlobalPosition = true;
         }
-        
         onUpdate(mPosChanged, mSizeChanged);
         mSizeChanged = false, mPosChanged = false;
         mChangedKeys.clear();

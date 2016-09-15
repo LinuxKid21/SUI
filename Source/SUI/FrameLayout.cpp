@@ -6,6 +6,7 @@ namespace sui {
         ;
     }
     void FrameLayout::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Container::onUpdate(posChanged, sizeChanged);
         
         // only one child but this works just the same either way
         for(auto &child : getChildren()) {

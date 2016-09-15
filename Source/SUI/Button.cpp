@@ -5,12 +5,11 @@ namespace sui {
     Button::Button() : Widget() {
         mText = sf::Text();
         mText.setString("");
-        mHovered = false;
-        mClicked = false;
         mRectangleShape = sf::RectangleShape();
     }
     
     void Button::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         bool shouldUpdateText = false;
         
         if(sizeChanged) {
@@ -32,7 +31,7 @@ namespace sui {
             shouldUpdateText = true;
         }
         
-        bool shouldUpdateColor = false;
+        bool shouldUpdateColor = hasPropChanged("hovering") || hasPropChanged("clicking");
         if(hasPropChanged("textColor")) {
             mText.setColor(getProperty("textColor").as<sf::Color>());
         }
@@ -68,44 +67,10 @@ namespace sui {
         target.draw(mText, states);
     }
     
-    void Button::onInput(sf::Event e) {
-        if(e.type == sf::Event::MouseMoved) {
-            const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
-            if(getGlobalBounds().contains(mousePos)) {
-                // call only while entering, not constantly while inside
-                if(!mHovered) {
-                    onEntered();
-                }
-
-                mHovered = true;
-            } else if(mHovered) {
-                onExited();
-                mHovered = false;
-            }
-        } else if(e.type == sf::Event::MouseButtonPressed) {
-            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
-            if(getGlobalBounds().contains(mousePos)) {
-                mClicked = true;
-                onClickedDown();
-            }
-        } else if(e.type == sf::Event::MouseButtonReleased && mClicked) {
-            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
-            if(getGlobalBounds().contains(mousePos)) {
-                mHovered = true;
-            } else {
-                mHovered = false;
-            }
-            mClicked = false;
-            
-            onClickedUp();
-        }
-        updateFillColors();
-    }
-    
     void Button::updateFillColors() {
-        if(mClicked) {
+        if(getProperty("clicking").as<bool>()) {
             mRectangleShape.setFillColor(norm_color);
-        } else if(mHovered) {
+        } else if(getProperty("hovering").as<bool>()) {
             mRectangleShape.setFillColor(hover_color);
         } else {
             mRectangleShape.setFillColor(click_color);

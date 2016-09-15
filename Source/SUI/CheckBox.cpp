@@ -17,21 +17,19 @@ namespace sui {
     }
     
     void CheckBox::onInput(sf::Event e) {
-        if(e.type == sf::Event::MouseButtonPressed) {
-            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
-            if(getGlobalBounds().contains(mousePos)) {
-                mState = !mState;
-                onToggled();
-                if(mState) {
-                    onToggledOn();
-                }
-                if(!mState) {
-                    onToggledOff();
-                }
-            }
+        Widget::onInput(e);
+        
+        if(hasPropChanged("clicking") && getProperty("clicking").as<bool>()) {
+            mState = !mState;
+            onToggled();
+            if(mState)
+                onToggledOn();
+            else
+                onToggledOff();
         }
     }
     void CheckBox::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Widget::onUpdate(posChanged, sizeChanged);
         const bool thickness_changed = hasPropChanged("outlineThickness");
         if(thickness_changed) {
             const float bar_width = getProperty("outlineThickness").as<float>();

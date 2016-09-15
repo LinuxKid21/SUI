@@ -67,8 +67,8 @@ namespace sui {
         
     protected:
         virtual void onDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
-        virtual void onInput(sf::Event e) = 0;
-        virtual void onUpdate(const bool posChanged, const bool sizeChanged) {}
+        virtual void onInput(sf::Event e);
+        virtual void onUpdate(const bool posChanged, const bool sizeChanged);
         
         
         ORIGIN mOriginX;
@@ -82,6 +82,23 @@ namespace sui {
         virtual void _onUpdate();
         virtual void _setPropertyChanged(const std::string key) {
             mChangedKeys.insert(key);
+        }
+        
+        void onEntered() {
+            const Property &p = getProperty("onEntered");
+            if(p) p.asFunc()();
+        }
+        void onExited() {
+            const Property &p = getProperty("onExited");
+            if(p) p.asFunc()();
+        }
+        void onClickedDown() {
+            const Property &p = getProperty("onClickedDown");
+            if(p) p.asFunc()();
+        }
+        void onClickedUp() {
+            const Property &p = getProperty("onClickedUp");
+            if(p) p.asFunc()();
         }
         
         // helper for getLocalBounds and getGlobalBounds functions

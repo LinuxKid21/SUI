@@ -23,14 +23,6 @@ namespace sui {
         void sliderChanged();
         void placeSlider();
         
-        void onClickedDown() {
-            const Property &p = getProperty("onClickedDown");
-            if(p) p.asFunc()();
-        }
-        void onClickedUp() {
-            const Property &p = getProperty("onClickedUp");
-            if(p) p.asFunc()();
-        }
         void onValueChanged() {
             const Property &p = getProperty("onValueChanged");
             if(p) p.asFunc()();
@@ -49,7 +41,5 @@ namespace sui {
         
         // value in the range [0,1]
         float mSliderPosition;
-        
-        bool mClicked;
     };
 }

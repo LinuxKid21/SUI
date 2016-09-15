@@ -17,6 +17,9 @@ namespace sui {
         
         mPosChanged = false;
         mSizeChanged = false;
+        
+        setProperty<bool>("hovering", false);
+        setProperty<bool>("clicking", false);
     }
     Widget::~Widget() {
         ;
@@ -44,6 +47,48 @@ namespace sui {
         onUpdate(mPosChanged, mSizeChanged);
         mSizeChanged = false, mPosChanged = false;
         mChangedKeys.clear();
+    }
+    void Widget::onUpdate(const bool posChanged, const bool sizeChanged) {
+        if(hasPropChanged("hovering")) {
+            if(getProperty("hovering").as<bool>()) {
+                onEntered();
+            } else {
+                onExited();
+            }
+        }
+        if(hasPropChanged("clicking")) {
+            if(getProperty("clicking").as<bool>()) {
+                onClickedDown();
+            } else {
+                onClickedUp();
+            }
+        }
+    }
+    
+    void Widget::onInput(sf::Event e) {
+        if(e.type == sf::Event::MouseMoved) {
+            const auto mousePos = sf::Vector2f(e.mouseMove.x, e.mouseMove.y);
+            if(getGlobalBounds().contains(mousePos)) {
+                if(!getProperty("hovering").as<bool>())
+                    setProperty<bool>("hovering", true);
+            } else if(getProperty("hovering").as<bool>()) {
+                setProperty<bool>("hovering", false);
+            }
+        } else if(e.type == sf::Event::MouseButtonPressed) {
+            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
+            if(getGlobalBounds().contains(mousePos)) {
+                setProperty<bool>("clicking", true);
+            }
+        } else if(e.type == sf::Event::MouseButtonReleased && getProperty("clicking").as<bool>()) {
+            const auto mousePos = sf::Vector2f(e.mouseButton.x, e.mouseButton.y);
+            if(getGlobalBounds().contains(mousePos)) {
+                if(!getProperty("hovering").as<bool>())
+                    setProperty<bool>("hovering", true);
+            } else {
+                setProperty<bool>("hovering", false);
+            }
+            setProperty<bool>("clicking", false);
+        }
     }
     
     bool Widget::setPosition(sf::Vector2f pos) {

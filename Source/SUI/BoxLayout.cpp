@@ -15,6 +15,7 @@ namespace sui {
     }
     
     void BoxLayout::onUpdate(const bool posChanged, const bool sizeChanged) {
+        Container::onUpdate(posChanged, sizeChanged);
         bool recalculate = hasPropChanged("childAdded") || hasPropChanged("childRemoved") || hasPropChanged("padding") || hasPropChanged("direction");
         for(auto &w : mChildren) {
             if(recalculate) break;
