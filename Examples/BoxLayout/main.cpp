@@ -42,16 +42,11 @@ int main() {
     // for fun make the added boxes spell "hbox!!!!!!!!"
     const char *str = "hbox!";
     const char *iter = str;
-    button->setProperty("onClickedDown", sui::Property::makeFunc([&hbox, &iter](){
-        auto *b = new sui::Button();
-        b->setProperty("text", sui::Property::make<sf::String>(std::string(1, *iter)));
-        
-        // add button that will help spell "hbox!" to the hbox
-        hbox->addChild(b);
-        
-        if(*iter != '!') {
-            iter++;
-        }
+    
+    // don't modify children(including adding or removing them) directly inside the input loop
+    bool shouldAddButton = false;
+    button->setProperty("onClickedDown", sui::Property::makeFunc([&shouldAddButton](){
+        shouldAddButton = true;
     }));
     
     // add the button to out hbox
@@ -72,6 +67,19 @@ int main() {
             hbox->handleInput(event);
     	}
     	window.clear();
+        
+        if(shouldAddButton) {
+            auto *b = new sui::Button();
+            b->setProperty<sf::String>("text", (sf::String)std::string(1, *iter));
+            
+            // add button that will help spell "hbox!" to the hbox
+            hbox->addChild(b);
+            
+            if(*iter != '!') {
+                iter++;
+            }
+            shouldAddButton = false;
+        }
         
         // this will automatically call this for all of it's children
         hbox->update();
