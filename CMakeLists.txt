@@ -17,7 +17,10 @@ target_link_libraries(sui_static
 	sfml-graphics
 	sfml-audio
 	sfml-window
-	sfml-system)
+	sfml-system
+	readline
+	${CMAKE_CURRENT_SOURCE_DIR}/Lua/linux/liblua.so
+	dl)
 elseif(WIN32)
 	include_directories(./SFML)
 	target_link_libraries(sui_static

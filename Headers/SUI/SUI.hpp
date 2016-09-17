@@ -12,3 +12,5 @@
 #include "FrameLayout.hpp"
 #include "ColorBox.hpp"
 #include "ComboBox.hpp"
+#include "LuaHelper.hpp"
+#include "LuaBindings.hpp"
