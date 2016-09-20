@@ -12,8 +12,6 @@ int main() {
     text_area->setProperty("font", &font);
     text_area->setProperty("outlineThickness", 2.f);
     text_area->setProperty("fillColor", sf::Color(255,255,255,255));
-    text_area->setProperty("fillColorHovered", sf::Color(200,200,200,255));
-    text_area->setProperty("fillColorClicked", sf::Color(100,100,100,255));
     text_area->setProperty("textColor", sf::Color(0,0,0,255));
     text_area->setProperty("outlineColor", sf::Color(0,255,0,255));
     text_area->setProperty("fontSize", 24.f);

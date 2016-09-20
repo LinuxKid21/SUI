@@ -45,6 +45,9 @@ namespace sui {
         if(hasPropChanged("outlineColor")) {
             mRectangleShape.setOutlineColor(getProperty("outlineColor").as<sf::Color>());
         }
+        if(hasPropChanged("fillColor")) {
+            mRectangleShape.setFillColor(getProperty("fillColor").as<sf::Color>());
+        }
         if(hasPropChanged("outlineThickness")) {
             mRectangleShape.setOutlineThickness(-getProperty("outlineThickness").as<float>());
         }
