@@ -12,5 +12,5 @@ namespace sui {
     
     // wraps 'str' so it fits inside width and returns the string with the appropriate line breaks
     // currently does this anywhere instead of just whitespaces
-    std::string wrapText(const sf::Font &font, const int font_size, const float width, const std::string str);
+    sf::String wrapText(const sf::Font &font, const int font_size, const float width, const sf::String str);
 }

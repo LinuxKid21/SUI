@@ -1,6 +1,6 @@
 set(CMAKE_BUILD_TYPE Debug)
 set(EXAMPLE_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Binaries)
-set(EXAMPLES HelloWorld GridView BoxLayout Widgets InititiveTracker Animation Lua)
+set(EXAMPLES HelloWorld GridView BoxLayout Widgets InititiveTracker Animation Lua TextArea)
 
 # most examples use the same code so why not make it into a function?
 function(add_generic_example name)

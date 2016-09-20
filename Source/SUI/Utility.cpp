@@ -50,12 +50,16 @@ namespace sui {
         text.setOrigin(origin_x,origin_y);
     }
     
-    std::string wrapText(const sf::Font &font, const int font_size, const float width, const std::string str) {
-        std::string string = str;
-        float text_width = 0;
+    sf::String wrapText(const sf::Font &font, const int font_size, const float width, const sf::String str) {
+        sf::String string = str;
         sf::Uint32 prevChar = 0;
-        for(int i = 0;i < string.size(); i++) {
+        float text_width = 0;
+        for(int i = 0;i < string.getSize(); i++) {
             sf::Uint32 curChar = string[i];
+            if(curChar == '\n') {
+                text_width = 0;
+                continue;
+            }
     		const float letter_advance = font.getGlyph(curChar, font_size, false).advance;
             const float kerning = font.getKerning(prevChar, curChar, font_size);
             text_width += letter_advance + kerning;
