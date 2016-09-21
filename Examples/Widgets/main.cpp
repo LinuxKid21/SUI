@@ -14,13 +14,13 @@ int main() {
     sf::Font font = sf::Font();
     font.loadFromFile("arial.ttf");
     vbox->setProperty("font", sui::Property::make(&font));
-    vbox->setProperty("outlineThickness", sui::Property::make(4.f));
+    vbox->setProperty("outlineThickness", sui::Property::make(2.f));
     vbox->setProperty("fillColor", sui::Property::make(sf::Color(255,255,255,255)));
     vbox->setProperty("fillColorHovered", sui::Property::make(sf::Color(200,200,200,255)));
     vbox->setProperty("fillColorClicked", sui::Property::make(sf::Color(100,100,100,255)));
     vbox->setProperty("textColor", sui::Property::make(sf::Color(0,0,0,255)));
     vbox->setProperty("outlineColor", sui::Property::make(sf::Color(0,255,0,255)));
-    vbox->setProperty("fontSize", sui::Property::make(24.f));
+    vbox->setProperty("fontSize", sui::Property::make(20.f));
     vbox->setProperty("textAlignX", sui::Property::make(sui::ORIGIN_MIDDLE));
     vbox->setProperty("textAlignY", sui::Property::make(sui::ORIGIN_MIDDLE));
     vbox->setProperty("padding", sui::Property::make(5.f));
@@ -38,7 +38,14 @@ int main() {
         std::cout << "Hello World" << "\n";
     }));
     
-    // add Combo box!
+    auto combo_box = vbox->addChild(new sui::ComboBox());
+    combo_box->setProperty("item0", sf::String("Apple"));
+    combo_box->setProperty("item1", sf::String("Bannana"));
+    combo_box->setProperty("item2", sf::String("Pie"));
+    combo_box->setProperty("item3", sf::String("-------"));
+    combo_box->setProperty("onPropertyChanged", sui::Property::makeFunc([&combo_box](){
+        std::cout << combo_box->getProperty("item").as<sf::String>().toAnsiString() << "\n";
+    }));
     
     auto *text_field = vbox->addChild(new sui::TextField());
     
