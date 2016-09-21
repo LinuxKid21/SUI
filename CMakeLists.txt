@@ -12,6 +12,18 @@ add_library(sui_static STATIC ${SOURCES})
 
 include_directories(./Headers)
 
+if("${TARGET}" STREQUAL "Win64")
+	SET(CMAKE_SYSTEM_NAME Linux)  # Tell CMake we're cross-compiling
+	include(CMakeForceCompiler)
+	CMAKE_FORCE_CXX_COMPILER(/usr/bin/x86_64-w64-mingw32-g++ GNU)
+endif()
+
+if("${TARGET}" STREQUAL "Win32")
+	SET(CMAKE_SYSTEM_NAME Linux)  # Tell CMake we're cross-compiling
+	include(CMakeForceCompiler)
+	CMAKE_FORCE_CXX_COMPILER(/usr/bin/i686-w64-mingw32-g++ GNU)
+endif()
+
 if(UNIX)
 target_link_libraries(sui_static
 	sfml-graphics
