@@ -1,6 +1,13 @@
 #include <SUI/LuaBindings.hpp>
 #include <SUI/Button.hpp>
 #include <SUI/CheckBox.hpp>
+#include <SUI/ColorBox.hpp>
+#include <SUI/ComboBox.hpp>
+#include <SUI/Image.hpp>
+#include <SUI/MsgTextArea.hpp>
+#include <SUI/Slider.hpp>
+#include <SUI/Text.hpp>
+#include <SUI/TextField.hpp>
 
 
 namespace sui {
@@ -10,8 +17,33 @@ namespace sui {
         lua_pushlightuserdata(L, this);
         lua_setglobal(L, "__gui");
         
-        giveLuaFunc(L, "addButton", addButton);
-        giveLuaFunc(L, "addCheckBox", addCheckBox);
+        giveLuaFunc(L, "addButton", [](lua_State *L){
+            return addWidget(L, new Button());
+        });
+        giveLuaFunc(L, "addCheckBox", [](lua_State *L){
+            return addWidget(L, new CheckBox());
+        });
+        giveLuaFunc(L, "addColorBox", [](lua_State *L){
+            return addWidget(L, new ColorBox());
+        });
+        giveLuaFunc(L, "addComboBox", [](lua_State *L){
+            return addWidget(L, new ComboBox());
+        });
+        giveLuaFunc(L, "addImage", [](lua_State *L){
+            return addWidget(L, new Image());
+        });
+        giveLuaFunc(L, "addMsgTextArea", [](lua_State *L){
+            return addWidget(L, new MsgTextArea());
+        });
+        giveLuaFunc(L, "addSlider", [](lua_State *L){
+            return addWidget(L, new Slider());
+        });
+        giveLuaFunc(L, "addText", [](lua_State *L){
+            return addWidget(L, new Text());
+        });
+        giveLuaFunc(L, "addTextField", [](lua_State *L){
+            return addWidget(L, new TextField());
+        });
         giveLuaFunc(L, "setPosition", setPosition);
         giveLuaFunc(L, "setSize", setSize);
         giveLuaFunc(L, "setProperty", setProperty);
@@ -36,18 +68,9 @@ namespace sui {
     }
     
     // -------------------------static funcs-------------------------
-    int LuaGUI::addButton(lua_State *L) {
+    int LuaGUI::addWidget(lua_State *L, Widget *w) {
         checkArgCount(L, 0);
         
-        Widget *w = new Button();
-        getGUI(L)->widgets.push_back(w);
-        lua_pushlightuserdata(L, w);
-        return 1;
-    }
-    int LuaGUI::addCheckBox(lua_State *L) {
-        checkArgCount(L, 0);
-        
-        Widget *w = new CheckBox();
         getGUI(L)->widgets.push_back(w);
         lua_pushlightuserdata(L, w);
         return 1;

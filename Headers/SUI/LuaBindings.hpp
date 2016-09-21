@@ -181,8 +181,7 @@ namespace sui {
             return gui;
         }
         
-        static int addButton(lua_State *L);
-        static int addCheckBox(lua_State *L);
+        static int addWidget(lua_State *L, Widget *w);
         static int setPosition(lua_State *L);
         static int setSize(lua_State *L);
         static int setOrigin(lua_State *L);
