@@ -1,2 +1,4 @@
 Build/
-libsui_static.a
+Lib/
+Bin/
+build.cmake
